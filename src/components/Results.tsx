@@ -19,7 +19,8 @@ export function Results({ game, onRestart, onNewGame, onMenu }: Props) {
   const ranked = ranking(game);
   const top = ranked[0];
   const winners = ranked.filter((p) => p.score === top.score && p.timeline.length === top.timeline.length);
-  const played = game.log.filter((l) => l.result !== 'skipped').length;
+  const played = game.log.length;
+  const bonusChips = game.log.filter((l) => l.bonusChip).length;
   const vetoWins = game.log.filter((l) => l.result === 'veto').length;
 
   return (
@@ -30,7 +31,9 @@ export function Results({ game, onRestart, onNewGame, onMenu }: Props) {
           {winners.length > 1 ? `Gleichstand: ${winners.map((w) => w.name).join(' & ')}` : `🏆 ${top.name} gewinnt!`}
         </h1>
         <p className="lead">
-          {played} Song{played === 1 ? '' : 's'} gespielt{game.settings.vetoEnabled ? ` · ${vetoWins} erfolgreiche${vetoWins === 1 ? 's' : ''} Veto${vetoWins === 1 ? '' : 's'}` : ''}
+          {played} Song{played === 1 ? '' : 's'} gespielt
+          {game.settings.vetoEnabled &&
+            ` · ${vetoWins} erfolgreiche${vetoWins === 1 ? 's' : ''} Veto${vetoWins === 1 ? '' : 's'} · ${bonusChips} Bonus-Chip${bonusChips === 1 ? '' : 's'}`}
         </p>
       </header>
 

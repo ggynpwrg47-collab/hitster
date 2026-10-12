@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { GameSettings, GameState, PlayerSetup, Song } from '../types';
-import { correctGaps, createGame, DEFAULT_SETTINGS, gameReducer, insertSorted, vetoBlockReason, yearPoints } from './game';
+import { bonusEligible, correctGaps, createGame, DEFAULT_SETTINGS, gameReducer, insertSorted, vetoBlockReason, yearPoints } from './game';
 
 function song(id: string, year: number | null): Song {
   return { id, title: `T${id}`, artist: `A${id}`, year, precision: 'year', yearSource: 'manual', warnings: [], confirmed: true };
@@ -116,10 +116,10 @@ describe('Veto-Chips', () => {
     let g = setup([1970, 1980, 1990, 2000, 2010, 2020, 1960], { vetoStartChips: 1 });
     g = run(g, { type: 'guess', value: 0 }, { type: 'confirm' }, { type: 'veto', playerId: 'p2', value: 1 });
     expect(g.players[1].chips).toBe(0);
-    g = run(g, { type: 'reveal' }, { type: 'next' }, { type: 'guess', value: 0 }, { type: 'confirm' });
+    g = run(g, { type: 'reveal' }, { type: 'bonus', answer: false }, { type: 'next' }, { type: 'guess', value: 0 }, { type: 'confirm' });
     // Ben ist jetzt aktiv; Anna hat noch 1 Chip, Ben 0
     expect(vetoBlockReason(g, 'p1', 1)).toBeNull();
-    g = run(g, { type: 'reveal' }, { type: 'next' }, { type: 'guess', value: 0 }, { type: 'confirm' });
+    g = run(g, { type: 'reveal' }, { type: 'bonus', answer: false }, { type: 'next' }, { type: 'guess', value: 0 }, { type: 'confirm' });
     // Cem aktiv; Ben hat 0 Chips
     expect(vetoBlockReason(g, 'p2', 1)).toMatch(/keine Veto-Chips/);
     const before = g;
@@ -150,14 +150,10 @@ describe('Veto-Chips', () => {
     expect(g.turn?.phase).toBe('locked');
   });
 
-  it('Zurückziehen und Überspringen erstatten Chips', () => {
-    let g = run(locked(), { type: 'veto', playerId: 'p2', value: 1 }, { type: 'withdrawVeto', playerId: 'p2' });
+  it('Zurückziehen erstattet den Chip', () => {
+    const g = run(locked(), { type: 'veto', playerId: 'p2', value: 1 }, { type: 'withdrawVeto', playerId: 'p2' });
     expect(g.players[1].chips).toBe(DEFAULT_SETTINGS.vetoStartChips);
     expect(g.turn?.vetoes).toEqual([]);
-    g = run(g, { type: 'veto', playerId: 'p3', value: 1 }, { type: 'skip' });
-    expect(g.players[2].chips).toBe(DEFAULT_SETTINGS.vetoStartChips);
-    expect(g.turn).toMatchObject({ songId: '4', phase: 'guessing', vetoes: [] });
-    expect(g.activeIndex).toBe(0);
   });
 
   it('Neustart setzt Chips, Punkte und Zeitleisten zurück', () => {
@@ -178,26 +174,23 @@ describe('Rundenablauf', () => {
   it('endet nach der eingestellten Rundenzahl', () => {
     const years = Array.from({ length: 20 }, (_, i) => 1960 + i);
     let g = setup(years, { rounds: 1 });
-    for (let i = 0; i < 3; i++) g = run(g, { type: 'guess', value: 0 }, { type: 'confirm' }, { type: 'reveal' }, { type: 'next' });
+    for (let i = 0; i < 3; i++) g = run(g, { type: 'guess', value: 0 }, { type: 'confirm' }, { type: 'reveal' }, { type: 'bonus', answer: false }, { type: 'next' });
     expect(g.status).toBe('finished');
     expect(g.finishReason).toBe('rounds');
   });
   it('endet, wenn der Stapel leer ist', () => {
     let g = setup([1970, 1980, 1990, 2000]);
-    g = run(g, { type: 'guess', value: 0 }, { type: 'confirm' }, { type: 'reveal' }, { type: 'next' });
+    g = run(g, { type: 'guess', value: 0 }, { type: 'confirm' }, { type: 'reveal' }, { type: 'bonus', answer: false }, { type: 'next' });
     expect(g.status).toBe('finished');
     expect(g.finishReason).toBe('deck-empty');
   });
   it('endet bei erreichter Zielkartenzahl', () => {
     const years = Array.from({ length: 20 }, (_, i) => 1960 + i);
     let g = setup(years, { targetCards: 2, rounds: 10 });
-    g = run(g, { type: 'guess', value: 1 }, { type: 'confirm' }, { type: 'reveal' }, { type: 'next' });
+    g = run(g, { type: 'guess', value: 1 }, { type: 'confirm' }, { type: 'reveal' }, { type: 'bonus', answer: false }, { type: 'next' });
     expect(g.finishReason).toBe('target');
   });
-  it('Überspringen ist abschaltbar', () => {
-    const g = setup([1970, 1980, 1990, 2000, 2010], { allowSkip: false });
-    expect(run(g, { type: 'skip' })).toBe(g);
-  });
+
 });
 
 describe('Jahres-Modus', () => {
@@ -218,5 +211,58 @@ describe('Jahres-Modus', () => {
   it('Veto darf nicht dasselbe Jahr wie der aktive Spieler nennen', () => {
     const g = run(yearGame(), { type: 'guess', value: 1988 }, { type: 'confirm' });
     expect(vetoBlockReason(g, 'p2', 1988)).toMatch(/aktiven Spielers/);
+  });
+});
+
+describe('Bonus-Chip für Titel und Interpret', () => {
+  // Anna hat 1970, Zugkarte 2000: Lücke 1 ist richtig, Lücke 0 falsch.
+  const revealed = (gap: number, settings: Partial<GameSettings> = {}) =>
+    run(setup([1970, 1980, 1990, 2000, 2010], settings), { type: 'guess', value: gap }, { type: 'confirm' }, { type: 'reveal' });
+
+  it('wird nur bei richtigem Jahr abgefragt', () => {
+    expect(bonusEligible(revealed(1))).toBe(true);
+    expect(bonusEligible(revealed(0))).toBe(false);
+  });
+  it('„Ja“ gibt genau einen Chip und wird protokolliert', () => {
+    let g = run(revealed(1), { type: 'bonus', answer: true });
+    expect(g.players[0].chips).toBe(DEFAULT_SETTINGS.vetoStartChips + 1);
+    expect(g.turn?.bonus).toBe(true);
+    expect(g.log.at(-1)?.bonusChip).toBe(true);
+    expect(bonusEligible(g)).toBe(false);
+    g = run(g, { type: 'bonus', answer: true }); // zweites Mal wirkungslos
+    expect(g.players[0].chips).toBe(DEFAULT_SETTINGS.vetoStartChips + 1);
+  });
+  it('„Nein“ gibt keinen Chip', () => {
+    const g = run(revealed(1), { type: 'bonus', answer: false });
+    expect(g.players[0].chips).toBe(DEFAULT_SETTINGS.vetoStartChips);
+    expect(g.turn?.bonus).toBe(false);
+  });
+  it('bei falschem Jahr gibt es keinen Chip, auch wenn man es versucht', () => {
+    const g = revealed(0);
+    expect(run(g, { type: 'bonus', answer: true })).toBe(g);
+  });
+  it('nicht für erfolgreiche Veto-Spieler', () => {
+    const g = run(setup([1970, 1980, 1990, 2000, 2010]), { type: 'guess', value: 0 }, { type: 'confirm' }, { type: 'veto', playerId: 'p2', value: 1 }, { type: 'reveal' });
+    expect(g.turn?.result?.winnerId).toBe('p2');
+    expect(bonusEligible(g)).toBe(false);
+  });
+  it('„Nächster Zug“ wartet auf die Antwort', () => {
+    const g = revealed(1);
+    expect(run(g, { type: 'next' })).toBe(g);
+    expect(run(g, { type: 'bonus', answer: false }, { type: 'next' }).activeIndex).toBe(1);
+  });
+  it('ohne Veto-Chips keine Bonusfrage', () => {
+    expect(bonusEligible(revealed(1, { vetoEnabled: false }))).toBe(false);
+  });
+  it('Jahres-Modus: nur bei exakt richtigem Jahr', () => {
+    const yearGame = () => createGame([song('a', 1985), song('b', 1990)], players, { ...DEFAULT_SETTINGS, mode: 'year', shuffle: false }, 1, 'd');
+    const exact = run(yearGame(), { type: 'guess', value: 1985 }, { type: 'confirm' }, { type: 'reveal' });
+    const close = run(yearGame(), { type: 'guess', value: 1986 }, { type: 'confirm' }, { type: 'reveal' });
+    expect(bonusEligible(exact)).toBe(true);
+    expect(bonusEligible(close)).toBe(false);
+  });
+  it('Neustart setzt Bonus-Chips zurück', () => {
+    const g = run(revealed(1), { type: 'bonus', answer: true }, { type: 'restart', seed: 3 });
+    expect(g.players.every((p) => p.chips === DEFAULT_SETTINGS.vetoStartChips)).toBe(true);
   });
 });

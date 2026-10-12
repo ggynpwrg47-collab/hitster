@@ -12,7 +12,7 @@ Abgedeckt sind u. a.: Datumsgenauigkeit (Jahr/Monat/Tag, nie genauer als die Que
 Live- und Compilation-Warnungen, widersprüchliche Duplikate, CSV mit Anführungszeichen,
 Freitext-Import, Link-Prüfung (nur http/https), ID3v2.3/2.4, richtige und falsche Platzierung,
 gleiche Jahre, alle Veto-Regeln (ein Chip pro Position, nicht auf der Position des aktiven Spielers,
-keine negativen Chipstände, Rückgabe beim Zurücknehmen und Überspringen, Reset beim Neustart),
+keine negativen Chipstände, Rückgabe beim Zurücknehmen, Reset beim Neustart), Bonus-Chip (nur bei richtigem Jahr),
 Rundenende, Zielkarten, leerer Stapel und der Jahres-Modus.
 
 ## Manuelle Testschritte
@@ -61,7 +61,8 @@ Jahrgang hat bewusst **keinen** Login (siehe [SPOTIFY.md](SPOTIFY.md)). Zu prüf
 5. Veto setzen. Team 3 kann dieselbe Lücke nicht wählen, die Lücke des aktiven Teams ist nicht wählbar, *Wahl ändern* ist verschwunden.
 6. *Zurücknehmen* gibt den Chip zurück. Ein Team mit 0 Chips sieht „Keine Chips“ (deaktiviert).
 7. *Lösung zeigen*: Ergebnis, richtige Lücke(n) markiert; bei erfolgreichem Veto wandert die Karte in die Zeitleiste des Veto-Teams (unter *Alle Zeitleisten ansehen* prüfen). Die Punkte stimmen.
-8. *Überspringen* mit gesetztem Veto: Der Chip kommt zurück, und dasselbe Team zieht einen neuen Song.
+8. Bonus-Chip: Richtig eingeordnet → Frage „Auch Titel und Interpret erraten?“, „Nächster Zug“ ist bis zur Antwort gesperrt; „Ja“ erhöht die Chips sofort um 1. Falsch eingeordnet oder Karte per Veto verloren → keine Frage.
+8a. Während des Ratens steht auf der verdeckten Karte ein QR-Code (Handy-Kamera öffnet den Song); nach „Lösung zeigen“ verschwindet er und Jahr, Titel, Interpret erscheinen. Bei eigenen Audiodateien steht dort weiter „?“.
 9. *Neu starten*: Punkte 0, je 1 Startkarte, Chips wieder auf Startwert. *Beenden* → Ergebnis mit Rangliste.
 10. Jahres-Modus: ±1/±10 und Eingabefeld funktionieren; Veto mit gleichem Jahr wird abgelehnt; ein näheres Veto übernimmt die Punkte.
 11. Spotify-Song mit Link: „In der Spotify-App öffnen“ öffnet die Desktop-App (beim ersten Mal Browser-Nachfrage), **kein** neuer Tab. „Im Browser öffnen“ öffnet den Webplayer. Unter *Info & Datenschutz* auf „Browser-Tab“ umstellen → Knopf öffnet wieder einen Tab.

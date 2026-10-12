@@ -17,7 +17,6 @@ export const DEFAULT_SETTINGS: GameSettings = {
   rounds: 5,
   targetCards: 0,
   shuffle: true,
-  allowSkip: true,
   vetoEnabled: true,
   vetoStartChips: 2,
 };
@@ -117,7 +116,7 @@ export type GameAction =
   | { type: 'veto'; playerId: string; value: number }
   | { type: 'withdrawVeto'; playerId: string }
   | { type: 'reveal' }
-  | { type: 'skip' }
+  | { type: 'bonus'; answer: boolean }
   | { type: 'next' }
   | { type: 'restart'; seed: number }
   | { type: 'end' };
@@ -216,6 +215,20 @@ function refundVetoes(players: PlayerState[], vetoes: Veto[]): PlayerState[] {
   return players.map((p) => (vetoes.some((v) => v.playerId === p.id) ? { ...p, chips: p.chips + 1 } : p));
 }
 
+/**
+ * Bonusfrage „Titel und Interpret auch erraten?“: nur wenn Veto-Chips aktiv sind, der aktive Spieler
+ * das Jahr selbst richtig hatte (Zeitleiste: richtig eingeordnet; Jahres-Modus: exaktes Jahr)
+ * und die Frage in diesem Zug noch nicht beantwortet wurde.
+ */
+export function bonusEligible(state: GameState): boolean {
+  const turn = state.turn;
+  if (state.status !== 'playing' || !turn || turn.phase !== 'revealed' || !turn.result) return false;
+  if (!state.settings.vetoEnabled || turn.bonus !== undefined) return false;
+  const r = turn.result;
+  if (r.viaVeto || r.winnerId !== activePlayer(state).id) return false;
+  return state.settings.mode === 'timeline' ? r.correct : r.distance === 0;
+}
+
 export function gameReducer(state: GameState, action: GameAction): GameState {
   const turn = state.turn;
   switch (action.type) {
@@ -273,21 +286,21 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       };
       return { ...state, players, turn: { ...turn, phase: 'revealed', result }, log: [...state.log, entry] };
     }
-    case 'skip': {
-      if (state.status !== 'playing' || !turn || turn.phase === 'revealed' || !state.settings.allowSkip) return state;
-      const entry: LogEntry = {
-        round: state.round,
-        playerId: activePlayer(state).id,
-        songId: turn.songId,
-        result: 'skipped',
-        points: 0,
-        winnerId: null,
+    case 'bonus': {
+      if (!bonusEligible(state)) return state;
+      const active = activePlayer(state);
+      const log = state.log.slice();
+      if (log.length) log[log.length - 1] = { ...log[log.length - 1], bonusChip: action.answer };
+      return {
+        ...state,
+        players: action.answer ? state.players.map((p) => (p.id === active.id ? { ...p, chips: p.chips + 1 } : p)) : state.players,
+        turn: { ...turn!, bonus: action.answer },
+        log,
       };
-      // Bereits gesetzte Veto-Chips werden zurückgegeben, weil der Song nicht gewertet wird.
-      return drawFor({ ...state, players: refundVetoes(state.players, turn.vetoes), log: [...state.log, entry], turn: null });
     }
     case 'next': {
       if (state.status !== 'playing' || !turn || turn.phase !== 'revealed') return state;
+      if (bonusEligible(state)) return state; // erst die Bonusfrage beantworten
       const { settings } = state;
       if (settings.mode === 'timeline' && settings.targetCards > 0 && state.players.some((p) => p.timeline.length >= settings.targetCards)) {
         return finish(state, 'target');

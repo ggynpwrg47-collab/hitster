@@ -2,7 +2,7 @@
 
 Ein freundliches Musik-Quiz für Gruppen: Ein Song läuft, niemand sieht Titel oder Jahr, und alle raten,
 wo er in ihre persönliche Zeitleiste gehört. Dazu gibt es einen einfachen Modus „Jahr raten“,
-1–10 Spieler oder Teams, Veto-Chips, Überspringen, zufällige Reihenfolge und eine einstellbare
+1–10 Spieler oder Teams, Veto-Chips mit Bonus-Chip, zufällige Reihenfolge und eine einstellbare
 Rundenzahl. Jahrgang ist eigenständig gestaltet, nutzt keine Karten, Logos oder Inhalte von Hitster und
 ist eine installierbare Progressive Web App ohne Konto, Werbung oder Abo.
 
@@ -36,8 +36,8 @@ ist eine installierbare Progressive Web App ohne Konto, Werbung oder Abo.
 
 | Funktion | Zuverlässig? | Abhängig von |
 |---|---|---|
-| Zeitleisten-Modus und „Jahr raten“, 1–10 Spieler/Teams, Runden, Zielkarten, Überspringen, Zufall | ✅ ja | – |
-| Veto-Chips (ein-/ausschaltbar, Startanzahl einstellbar) | ✅ ja | – |
+| Zeitleisten-Modus und „Jahr raten“, 1–10 Spieler/Teams, Runden, Zielkarten, Zufall | ✅ ja | – |
+| Veto-Chips (ein-/ausschaltbar, Startanzahl einstellbar) und Bonus-Chip für erratenen Titel + Interpret | ✅ ja | – |
 | Beispiel-Deck mit 62 Hits (1956–2022) | ✅ ja | – |
 | Eigene Listen per Text, CSV oder TSV (u. a. mit Spalten aus gängigen Playlist-Exporten) | ✅ ja | Qualität der Daten |
 | Eigene Spotify-Playlists aus dem offiziellen Spotify-Datenexport (JSON) einlesen | ✅ ja | Export muss bei Spotify angefordert werden; enthält keine Jahre |
@@ -46,7 +46,7 @@ ist eine installierbare Progressive Web App ohne Konto, Werbung oder Abo.
 | Spotify-Songs direkt in der Spotify-App öffnen (ohne neuen Browser-Tab) | ✅ ja | installierte Spotify-App; Browser fragt beim ersten Mal nach |
 | Eigene Audiodateien abspielen, ohne Titel zu verraten | ✅ ja | Dateiformat muss der Browser unterstützen (MP3/AAC überall) |
 | Song über Link/Suche in Spotify, YouTube o. Ä. öffnen | ⚠️ teilweise | Konto und Abo beim Dienst; die Dienst-App zeigt den Titel an |
-| QR-Code, um auf einem zweiten Gerät abzuspielen | ✅ ja | Kamera-App auf dem zweiten Gerät |
+| QR-Code direkt auf der verdeckten Karte, um auf einem zweiten Gerät abzuspielen | ✅ ja | Kamera-App auf dem zweiten Gerät |
 | Installation als App, offline spielbar | ✅ ja | Browser mit PWA-Unterstützung; Links brauchen Internet |
 | Spotify-Login, Playlist-Auswahl aus dem Konto, Wiedergabe-Steuerung | ❌ nein | durch die Spotify-Policy ausgeschlossen |
 
@@ -58,7 +58,7 @@ ist eine installierbare Progressive Web App ohne Konto, Werbung oder Abo.
 - **Tech-Stack:** [Vite](https://vite.dev) + React 19 + TypeScript, [Vitest](https://vitest.dev) für Tests,
   `qrcode` für QR-Codes. Service Worker und Manifest sind handgeschrieben (keine Build-Magie).
 - **Spiel-Engine** (`src/lib/game.ts`): ein reiner Reducer ohne UI-Abhängigkeiten, vollständig getestet.
-  Alle Aktionen (Raten, Bestätigen, Veto, Zurücknehmen, Aufdecken, Überspringen, Weiter, Neustart,
+  Alle Aktionen (Raten, Bestätigen, Veto, Zurücknehmen, Aufdecken, Bonusfrage, Weiter, Neustart,
   Beenden) prüfen ihre Regeln selbst, sodass auch eine fehlerhafte Bedienung keinen ungültigen Zustand
   erzeugen kann.
 
@@ -219,8 +219,11 @@ die korrekte Einrichtung: Authorization Code mit PKCE ohne Secret, minimale Scop
   Bestätigungsdialog mit dem Chipstand. Liegt der aktive Spieler falsch und ein Veto richtig, ordnet der Veto-Spieler
   die Karte in **seine eigene** Zeitleiste ein (+1 Punkt; bei mehreren richtigen Chips gewinnt der zuerst gesetzte).
   Im Jahres-Modus übernimmt die nähere Veto-Schätzung die Punkte. Ein gesetzter Chip ist verbraucht. Vor dem Aufdecken
-  kann er zurückgenommen werden, und beim Überspringen wird er erstattet. Nach dem ersten Veto ist die Wahl des aktiven
+  kann er zurückgenommen werden. Nach dem ersten Veto ist die Wahl des aktiven
   Spielers gesperrt. Beim Neustart werden alle Chips auf den Startwert zurückgesetzt.
+- **Bonus-Chip:** Hat der aktive Spieler das Jahr selbst richtig (Zeitleiste: richtig eingeordnet; Jahres-Modus: exaktes
+  Jahr), fragt die App nach dem Aufdecken: „Auch Titel und Interpret erraten?“ – „Ja“ gibt einen Veto-Chip. Bei falschem
+  Jahr oder wenn ein Veto-Spieler die Karte gewinnt, kommt keine Frage. „Nächster Zug“ geht erst nach der Antwort.
 - **Spielende:** nach der eingestellten Rundenzahl, beim Erreichen der Zielkarten oder wenn der Stapel leer ist.
 
 ## Datenspeicherung und Sicherheit

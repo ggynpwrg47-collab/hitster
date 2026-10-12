@@ -17,7 +17,13 @@ export function Rules({ settings }: { settings: GameSettings }) {
         )}
         {settings.vetoEnabled && <li>Jetzt dürfen die anderen ein Veto einlegen (siehe unten).</li>}
         <li>Lösung aufdecken. {timeline ? 'Richtig eingeordnet = Karte bleibt liegen und zählt 1 Punkt.' : 'Punkte: exakt 3, ±1 Jahr 2, ±2–3 Jahre 1.'}</li>
-        {settings.allowSkip && <li>Kennt niemand den Song oder ist er kaputt? „Überspringen“ zieht einen neuen Song, ohne Wertung.</li>}
+        {settings.vetoEnabled && (
+          <li>
+            <strong>Bonus-Chip:</strong> Wer {timeline ? 'richtig eingeordnet' : 'das Jahr exakt getroffen'} hat, wird nach dem
+            Aufdecken gefragt, ob er auch Titel und Interpret richtig genannt hat. Bei „Ja“ gibt es einen Veto-Chip dazu. Die
+            Mitspieler entscheiden fair mit.
+          </li>
+        )}
       </ol>
       {timeline && <p>Jeder startet mit einer aufgedeckten Karte. Gleiche Jahre dürfen links oder rechts liegen.</p>}
       {settings.vetoEnabled && (
@@ -38,7 +44,7 @@ export function Rules({ settings }: { settings: GameSettings }) {
                 ? 'Liegt der aktive Spieler falsch und ein Veto-Chip richtig, bekommt der Veto-Spieler die Karte und ordnet sie in seine eigene Zeitleiste ein (+1 Punkt). Liegen mehrere richtig, gewinnt der zuerst gesetzte Chip.'
                 : 'Ist eine Veto-Schätzung näher dran als die des aktiven Spielers (und mindestens 1 Punkt wert), bekommt der Veto-Spieler seine Punkte und der aktive Spieler geht leer aus.'}
             </li>
-            <li>Ein gesetzter Chip ist verbraucht – egal ob das Veto erfolgreich war. Vor dem Aufdecken kann er zurückgenommen werden; beim Überspringen gibt es ihn zurück.</li>
+            <li>Ein gesetzter Chip ist verbraucht – egal ob das Veto erfolgreich war. Vor dem Aufdecken kann er zurückgenommen werden.</li>
             <li>Nach dem ersten Veto kann der aktive Spieler seine Wahl nicht mehr ändern.</li>
           </ul>
         </>

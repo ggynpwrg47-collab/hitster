@@ -67,7 +67,6 @@ export interface GameSettings {
   /** Nur Zeitleisten-Modus: Spiel endet, sobald jemand so viele Karten hat (0 = aus). */
   targetCards: number;
   shuffle: boolean;
-  allowSkip: boolean;
   vetoEnabled: boolean;
   vetoStartChips: number;
 }
@@ -116,15 +115,19 @@ export interface TurnState {
   guess: number | null;
   vetoes: Veto[];
   result?: TurnResult;
+  /** Antwort auf „Titel und Interpret auch erraten?“ (nur bei richtigem Jahr und aktiven Veto-Chips). */
+  bonus?: boolean;
 }
 
 export interface LogEntry {
   round: number;
   playerId: string;
   songId: string;
-  result: 'correct' | 'wrong' | 'veto' | 'skipped';
+  result: 'correct' | 'wrong' | 'veto';
   points: number;
   winnerId: string | null;
+  /** Bonus-Chip für erratenen Titel und Interpreten erhalten. */
+  bonusChip?: boolean;
 }
 
 export interface GameState {

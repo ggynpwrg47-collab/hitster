@@ -1348,3 +1348,45 @@ kbd {
   border-radius: 4px;
   padding: 0 0.3em;
 }
+
+/* ===== QR in der verdeckten Karte & Bonusfrage ===== */
+.mystery__card--qr {
+  aspect-ratio: auto;
+  padding: 1rem;
+  gap: 0.6rem;
+  justify-items: center;
+}
+.qr {
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  box-sizing: content-box;
+  max-width: 100%;
+}
+.qr img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+.qr__loading {
+  color: #444;
+  font-size: 0.9rem;
+}
+.bonus {
+  background: var(--veto-bg);
+  border: 2px solid var(--veto);
+  border-radius: var(--radius);
+  padding: 1rem;
+  display: grid;
+  gap: 0.5rem;
+  animation: pop 0.25s ease;
+}
+.bonus h3 {
+  color: var(--veto);
+}
+.bonus-done {
+  font-weight: 700;
+  color: var(--veto);
+}

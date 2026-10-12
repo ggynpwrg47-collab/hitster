@@ -3,7 +3,6 @@ import QRCode from 'qrcode';
 import type { Song } from '../types';
 import { linkHostLabel, searchLink, spotifyAppUri, type OpenIn, type SearchProvider } from '../lib/links';
 import { useAudioFiles } from './audioFiles';
-import { Dialog } from './Dialog';
 
 interface Props {
   song: Song;
@@ -114,22 +113,34 @@ function LocalAudio({ song }: { song: Song }) {
   );
 }
 
-function LinkPlayback({ song, searchProvider, openIn, revealed }: Props) {
-  const link = song.link ?? searchLink(searchProvider, song.artist, song.title);
-  const isSearch = !song.link;
-  const [qr, setQr] = useState<string | null>(null);
-  const [showQr, setShowQr] = useState(false);
+/** Abspiel-Link eines Songs: eigener Link oder – falls keiner hinterlegt ist – ein Suchlink. */
+export function playbackLink(song: Song, searchProvider: SearchProvider): string | undefined {
+  return song.fileName ? undefined : song.link ?? searchLink(searchProvider, song.artist, song.title);
+}
 
+/** QR-Code mit dem Abspiel-Link – zum Scannen mit einem zweiten Gerät, das die Musik abspielt. */
+export function SongQr({ link, size = 220 }: { link: string; size?: number }) {
+  const [qr, setQr] = useState<string | null>(null);
   useEffect(() => {
-    if (!showQr || !link) return;
     let active = true;
-    QRCode.toDataURL(link, { margin: 1, width: 280, errorCorrectionLevel: 'M' })
+    setQr(null);
+    QRCode.toDataURL(link, { margin: 1, width: size * 2, errorCorrectionLevel: 'M' })
       .then((d) => active && setQr(d))
       .catch(() => active && setQr(null));
     return () => {
       active = false;
     };
-  }, [showQr, link]);
+  }, [link, size]);
+  return (
+    <div className="qr" style={{ width: size, height: size }}>
+      {qr ? <img src={qr} alt="QR-Code zum Abspielen auf einem zweiten Gerät" width={size} height={size} /> : <span className="qr__loading">QR-Code …</span>}
+    </div>
+  );
+}
+
+function LinkPlayback({ song, searchProvider, openIn, revealed }: Props) {
+  const link = playbackLink(song, searchProvider);
+  const isSearch = !song.link;
 
   if (!link) {
     return (
@@ -163,9 +174,6 @@ function LinkPlayback({ song, searchProvider, openIn, revealed }: Props) {
             <span className="sr-only"> (öffnet in neuem Fenster)</span>
           </button>
         )}
-        <button type="button" className="btn btn--secondary" onClick={() => setShowQr(true)}>
-          QR-Code für zweites Gerät
-        </button>
       </div>
       {appUri && (
         <p className="muted small">
@@ -178,23 +186,10 @@ function LinkPlayback({ song, searchProvider, openIn, revealed }: Props) {
       )}
       {!revealed && (
         <p className="muted small">
-          Die Musik-App zeigt den Titel an. Legt das Gerät verdeckt hin oder lasst eine Person, die gerade nicht rät, den Song
-          starten. {isSearch && 'Bei der Suche bitte das Original (nicht Remix/Live) auswählen.'}
+          Tipp: QR-Code mit einem zweiten Handy scannen und es verdeckt hinlegen – dann sieht niemand den Titel.{' '}
+          {isSearch && 'Bei der Suche bitte das Original (nicht Remix/Live) auswählen.'}
         </p>
       )}
-      <Dialog
-        open={showQr}
-        title="Auf einem zweiten Gerät abspielen"
-        onClose={() => setShowQr(false)}
-        actions={
-          <button type="button" className="btn btn--primary" onClick={() => setShowQr(false)}>
-            Fertig
-          </button>
-        }
-      >
-        <p>Mit der Kamera des Abspielgeräts scannen. Das Gerät danach verdeckt hinlegen.</p>
-        <div className="qr">{qr ? <img src={qr} alt="QR-Code mit dem Abspiel-Link" width={280} height={280} /> : <p>Erzeuge QR-Code …</p>}</div>
-      </Dialog>
     </div>
   );
 }

@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import type { DeckKind, GameState, PlayerState } from '../types';
-import { activePlayer, currentSong, describeGap, vetoBlockReason, type GameAction } from '../lib/game';
+import { activePlayer, bonusEligible, currentSong, describeGap, vetoBlockReason, type GameAction } from '../lib/game';
 import { formatDate, precisionLabel } from '../lib/years';
 import { randomSeed } from '../lib/random';
 import type { OpenIn, SearchProvider } from '../lib/links';
 import { Timeline } from './Timeline';
 import { YearPicker } from './YearPicker';
-import { Playback } from './Playback';
+import { Playback, playbackLink, SongQr } from './Playback';
 import { ConfirmDialog, Dialog } from './Dialog';
 import { Rules } from './Rules';
 import { Results } from './Results';
@@ -23,7 +23,6 @@ interface Props {
 
 type Confirm =
   | { kind: 'veto'; playerId: string; value: number }
-  | { kind: 'skip' }
   | { kind: 'end' }
   | { kind: 'restart' }
   | { kind: 'peek' }
@@ -77,6 +76,8 @@ export function GameView({ game, dispatch, searchProvider, openIn, onMenu, onNew
     setConfirm({ kind: 'veto', playerId: vetoer, value });
   }
 
+  const qrLink = playbackLink(song, searchProvider);
+  const askBonus = bonusEligible(game);
   const winner = result?.winnerId ? game.players.find((p) => p.id === result.winnerId) : null;
 
   return (
@@ -131,7 +132,7 @@ export function GameView({ game, dispatch, searchProvider, openIn, onMenu, onNew
         </div>
 
         <div className="mystery">
-          <div className="mystery__card" aria-hidden={phase !== 'revealed'}>
+          <div className={`mystery__card${qrLink && phase !== 'revealed' ? ' mystery__card--qr' : ''}`}>
             {phase === 'revealed' ? (
               <>
                 <span className="mystery__year">{song.year}</span>
@@ -140,8 +141,10 @@ export function GameView({ game, dispatch, searchProvider, openIn, onMenu, onNew
               </>
             ) : (
               <>
-                <span className="mystery__year">?</span>
-                <span className="mystery__hint">Titel, Interpret und Jahr sind verdeckt</span>
+                {qrLink ? <SongQr link={qrLink} /> : <span className="mystery__year" aria-hidden="true">?</span>}
+                <span className="mystery__hint">
+                  {qrLink ? 'Scannen und auf dem zweiten Gerät abspielen' : 'Titel, Interpret und Jahr sind verdeckt'}
+                </span>
               </>
             )}
           </div>
@@ -178,11 +181,6 @@ export function GameView({ game, dispatch, searchProvider, openIn, onMenu, onNew
               <button type="button" className="btn btn--primary btn--large" disabled={turn.guess === null} onClick={() => dispatch({ type: 'confirm' })}>
                 {timelineMode ? 'Position bestätigen' : 'Jahr bestätigen'}
               </button>
-              {game.settings.allowSkip && (
-                <button type="button" className="btn btn--ghost" onClick={() => setConfirm({ kind: 'skip' })}>
-                  Überspringen
-                </button>
-              )}
             </div>
           </div>
         )}
@@ -298,11 +296,6 @@ export function GameView({ game, dispatch, searchProvider, openIn, onMenu, onNew
                   Wahl ändern
                 </button>
               )}
-              {game.settings.allowSkip && (
-                <button type="button" className="btn btn--ghost" onClick={() => setConfirm({ kind: 'skip' })}>
-                  Überspringen
-                </button>
-              )}
             </div>
           </div>
         )}
@@ -353,8 +346,29 @@ export function GameView({ game, dispatch, searchProvider, openIn, onMenu, onNew
                 correctGaps={result.correctGaps}
               />
             )}
+            {askBonus && (
+              <section className="bonus" aria-labelledby="bonus-title">
+                <h3 id="bonus-title">Bonus: Hat {active.name} auch Titel und Interpret erraten?</h3>
+                <p className="muted small">Bei „Ja“ gibt es einen Veto-Chip dazu ({active.chips} → {active.chips + 1}).</p>
+                <div className="row wrap">
+                  <button type="button" className="btn btn--primary" onClick={() => dispatch({ type: 'bonus', answer: true })}>
+                    Ja, +1 Chip
+                  </button>
+                  <button type="button" className="btn btn--ghost" onClick={() => dispatch({ type: 'bonus', answer: false })}>
+                    Nein
+                  </button>
+                </div>
+              </section>
+            )}
+            {turn.bonus === true && <p className="bonus-done" role="status">🎉 {active.name} bekommt einen Bonus-Chip!</p>}
             <div className="action-bar">
-              <button type="button" className="btn btn--primary btn--large" onClick={() => dispatch({ type: 'next' })} autoFocus>
+              <button
+                type="button"
+                className="btn btn--primary btn--large"
+                onClick={() => dispatch({ type: 'next' })}
+                disabled={askBonus}
+                title={askBonus ? 'Bitte zuerst die Bonusfrage beantworten' : undefined}
+              >
                 Nächster Zug →
               </button>
             </div>
@@ -412,17 +426,6 @@ export function GameView({ game, dispatch, searchProvider, openIn, onMenu, onNew
           setConfirm(null);
           setVetoer(null);
           setVetoYear(null);
-        }}
-        onCancel={() => setConfirm(null)}
-      />
-      <ConfirmDialog
-        open={confirm?.kind === 'skip'}
-        title="Song überspringen?"
-        message={`Der Song wird ohne Wertung abgelegt und ${active.name} bekommt einen neuen.${turn.vetoes.length ? ' Gesetzte Veto-Chips werden zurückgegeben.' : ''}`}
-        confirmLabel="Überspringen"
-        onConfirm={() => {
-          dispatch({ type: 'skip' });
-          setConfirm(null);
         }}
         onCancel={() => setConfirm(null)}
       />

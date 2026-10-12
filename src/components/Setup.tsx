@@ -185,10 +185,6 @@ export function Setup({ deck, prefs, onPrefs, onBack, onReview, onStart }: Props
             <input type="checkbox" checked={settings.shuffle} onChange={(e) => set('shuffle', e.target.checked)} />
             Zufällige Reihenfolge
           </label>
-          <label className="check">
-            <input type="checkbox" checked={settings.allowSkip} onChange={(e) => set('allowSkip', e.target.checked)} />
-            Überspringen erlauben
-          </label>
 
           <fieldset className="stack">
             <legend>Veto-Chips</legend>
