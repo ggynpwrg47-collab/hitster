@@ -3,6 +3,7 @@ import type { Deck, GameSettings, PlayerSetup } from './types';
 import { createGame, gameReducer, type GameAction } from './lib/game';
 import type { GameState } from './types';
 import { createDemoDeck } from './lib/demoDeck';
+import { loadBuiltinDecks } from './lib/builtinDecks';
 import { storage, type Prefs } from './lib/storage';
 import { randomSeed } from './lib/random';
 import { Home } from './components/Home';
@@ -29,7 +30,7 @@ function appGameReducer(state: GameState | null, action: Action): GameState | nu
 }
 
 export default function App() {
-  const [decks, setDecks] = useState<Deck[]>(() => [createDemoDeck(), ...storage.loadDecks()]);
+  const [decks, setDecks] = useState<Deck[]>(() => [createDemoDeck(), ...loadBuiltinDecks(), ...storage.loadDecks()]);
   const [prefs, setPrefs] = useState<Prefs>(() => storage.loadPrefs());
   const [game, dispatch] = useReducer(appGameReducer, null, () => storage.loadGame());
   const [view, setView] = useState<View>({ name: 'home' });
@@ -62,7 +63,7 @@ export default function App() {
   }, []);
 
   const deleteDeck = useCallback((id: string) => {
-    setDecks((list) => list.filter((d) => d.id !== id || d.kind === 'demo'));
+    setDecks((list) => list.filter((d) => d.id !== id || d.kind === 'demo' || d.kind === 'builtin'));
     setView({ name: 'home' });
   }, []);
 
@@ -150,7 +151,7 @@ export default function App() {
           onBack={() => setView({ name: 'home' })}
           onClearAll={() => {
             storage.clearAll();
-            setDecks([createDemoDeck()]);
+            setDecks([createDemoDeck(), ...loadBuiltinDecks()]);
             setPrefs(storage.loadPrefs());
             dispatch({ type: 'load', state: null });
             setView({ name: 'home' });

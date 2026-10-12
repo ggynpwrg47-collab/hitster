@@ -3,6 +3,7 @@ import type { Deck, Song } from '../types';
 import { detectYearWarnings, formatDate, isPlayable, markConflicts, needsReview, parseDate, precisionLabel, maxYear, MIN_YEAR } from '../lib/years';
 import { normalizeLink } from '../lib/links';
 import { uid } from '../lib/random';
+import { downloadDeck } from '../lib/deckFile';
 import { ConfirmDialog } from './Dialog';
 import { useAudioFiles } from './audioFiles';
 import { AlbumDateNote } from './InfoView';
@@ -32,7 +33,7 @@ const SOURCE_LABEL: Record<Song['yearSource'], string> = {
 };
 
 export function DeckReview({ deck, onChange, onDelete, onBack, onPlay, onOpenDeck }: Props) {
-  const readOnly = deck.kind === 'demo';
+  const readOnly = deck.kind === 'demo' || deck.kind === 'builtin';
   const missingCount = deck.songs.filter((s) => !isPlayable(s)).length;
   const toReviewCount = deck.songs.filter((s) => needsReview(s) || !isPlayable(s)).length;
   const [filter, setFilter] = useState<Filter>(toReviewCount > 0 && !readOnly ? 'review' : 'all');
@@ -102,9 +103,14 @@ export function DeckReview({ deck, onChange, onDelete, onBack, onPlay, onOpenDec
               Als eigene Liste kopieren
             </button>
           ) : (
-            <button type="button" className="btn btn--danger-ghost" onClick={() => setConfirmDelete(true)}>
-              Liste löschen
-            </button>
+            <>
+              <button type="button" className="btn btn--danger-ghost" onClick={() => setConfirmDelete(true)}>
+                Liste löschen
+              </button>
+              <button type="button" className="btn btn--secondary" onClick={() => downloadDeck(deck)}>
+                ⤓ Exportieren (für alle Geräte)
+              </button>
+            </>
           )}
           <button type="button" className="btn btn--primary" onClick={onPlay} disabled={deck.songs.filter(isPlayable).length < 2}>
             Weiter zum Spiel
@@ -126,7 +132,9 @@ export function DeckReview({ deck, onChange, onDelete, onBack, onPlay, onOpenDec
         )}
         <p className="lead">
           {readOnly
-            ? 'Dieses Beispiel-Deck ist schreibgeschützt. Kopiere es, um Jahre oder Links zu ändern.'
+            ? deck.kind === 'builtin'
+              ? 'Diese Liste ist fest in die App eingebaut (Ordner src/decks/) und auf allen Geräten verfügbar. Zum Ändern kopieren, bearbeiten, neu exportieren und die Datei im Ordner ersetzen.'
+              : 'Dieses Beispiel-Deck ist schreibgeschützt. Kopiere es, um Jahre oder Links zu ändern.'
             : 'Prüft vor dem Spiel die Jahre. Markierte Songs haben möglicherweise ein falsches oder ungenaues Jahr. Ein eingetragenes oder bestätigtes Jahr gilt als geprüft. Songs ohne Jahr werden im Spiel übersprungen.'}
         </p>
         <p className="spoiler-warning" role="note">

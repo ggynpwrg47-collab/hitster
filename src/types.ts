@@ -47,7 +47,7 @@ export interface Song {
   online?: OnlineCheck;
 }
 
-export type DeckKind = 'list' | 'local-audio' | 'demo';
+export type DeckKind = 'list' | 'local-audio' | 'demo' | 'builtin';
 
 export interface Deck {
   id: string;

@@ -44,6 +44,8 @@ Jahrgang hat bewusst **keinen** Login (siehe [SPOTIFY.md](SPOTIFY.md)). Zu prüf
 
 5. *Spotify-Datenexport*: `Playlist1.json` mit zwei Playlists wählen → beide erscheinen mit Songanzahl; Podcast-Folgen und lokale Dateien fehlen; nach „Übernehmen“ haben alle Songs einen Spotify-Link und stehen unter „Ohne Jahr“. Eine beliebige andere JSON-Datei ergibt eine verständliche Fehlermeldung.
 
+7. *Export & eingebaute Listen*: Liste → „Exportieren (für alle Geräte)“ lädt `name.jahrgang.json`. Diese Datei unter „CSV-/Textdatei“ wieder importieren → identische Liste. Datei nach `src/decks/` kopieren, `npm run build && npm run preview`, in einem privaten Fenster öffnen → Liste erscheint als „Fest eingebaut“, ist schreibgeschützt, lässt sich spielen und kopieren.
+
 ### C. Jahreszahlen
 1. In der Prüfansicht ein Jahr ändern und Enter drücken: Der Song gilt als geprüft, die Quelle wird „manuell eingetragen“.
 2. „Angezeigte bestätigen“ bestätigt nur die gefilterten Songs mit Jahr.

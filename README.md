@@ -25,7 +25,7 @@ ist eine installierbare Progressive Web App ohne Konto, Werbung oder Abo.
 5. [Online über HTTPS bereitstellen](#3-online-über-https-bereitstellen)
 6. [Spotify-Dashboard, Redirect-URLs und Umgebungsvariablen](#4-spotify-dashboard-redirect-urls-und-umgebungsvariablen)
 7. [Spätere Veröffentlichung als native App](#5-spätere-veröffentlichung-als-native-app)
-8. [Song-Listen und Jahreszahlen](#song-listen-und-jahreszahlen)
+8. [Song-Listen und Jahreszahlen](#song-listen-und-jahreszahlen) · [Listen auf allen Geräten](#listen-auf-allen-geräten-nutzen)
 9. [Spielregeln inklusive Veto-Chips](#spielregeln)
 10. [Datenspeicherung und Sicherheit](#datenspeicherung-und-sicherheit)
 11. [Fehlerbehebung](#fehlerbehebung)
@@ -223,6 +223,27 @@ die korrekte Einrichtung: Authorization Code mit PKCE ohne Secret, minimale Scop
 - In der **Prüfansicht** korrigiert oder bestätigt man die Jahre; ein von Hand eingetragenes Jahr gilt als geprüft.
   Songs ohne Jahr werden nicht gespielt. Beim Aufdecken ungeprüfter oder gewarnter Songs erscheint „⚠ Jahr unsicher“.
 
+## Listen auf allen Geräten nutzen
+
+Importierte Listen werden im **Browser des jeweiligen Geräts** gespeichert (`localStorage`). Was du am PC importierst,
+ist am Handy deshalb zunächst nicht da. Es gibt bewusst keinen Server und kein Konto, das Listen abgleicht.
+
+**Lösung: Listen fest in die App einbauen**
+1. Am PC die Liste importieren, die Jahre prüfen (gern mit „Jahre online prüfen“).
+2. In der Liste auf **„⤓ Exportieren (für alle Geräte)“** klicken. Es wird eine Datei wie `roadtrip-mix.jahrgang.json` gespeichert.
+3. Die Datei in den Ordner **`src/decks/`** im Repository legen. Am einfachsten auf GitHub im Browser: Ordner `src/decks`
+   öffnen → **„Add file → Upload files“** → Datei hineinziehen → **„Commit changes“**. Lokal: Datei kopieren, dann
+   `git add src/decks && git commit -m "Liste hinzugefügt" && git push`.
+4. Netlify baut die Seite automatisch neu. Nach etwa einer Minute steht die Liste auf **jedem Gerät** unter „Song-Listen“
+   mit der Markierung **„Fest eingebaut“**, am Handy ganz ohne Import.
+
+Eingebaute Listen sind schreibgeschützt. Zum Ändern: „Als eigene Liste kopieren“, bearbeiten, erneut exportieren und die
+Datei in `src/decks/` ersetzen. Zum Entfernen die Datei löschen.
+
+**Gut zu wissen:** Eingebaute Listen sind Teil der veröffentlichten Seite. Wer die Adresse kennt, kann sie sehen (Titel,
+Interpret, Jahr, Links – keine Musik, keine Kontodaten). Ohne Einbauen geht es auch direkt: Die exportierte Datei aufs
+Handy schicken und dort unter „Eigene Song-Liste anlegen → CSV-/Textdatei“ öffnen. Sie liegt dann nur auf diesem Handy.
+
 ## Spielregeln
 
 - **Zeitleiste:** Jeder startet mit einer aufgedeckten Karte. Der aktive Spieler ordnet den unbekannten Song in eine
@@ -245,6 +266,7 @@ die korrekte Einrichtung: Authorization Code mit PKCE ohne Secret, minimale Scop
 ## Datenspeicherung und Sicherheit
 
 - **Lokal im Browser** (`localStorage`): eigene Song-Listen, Einstellungen, Spielernamen und ein laufendes Spiel.
+- **In der App selbst:** nur Listen, die du bewusst in `src/decks/` ablegst (siehe „Listen auf allen Geräten nutzen“).
 - **Nicht gespeichert:** Audiodateien (nur im Arbeitsspeicher), Passwörter, Tokens, Konten. Es gibt keinen Server,
   kein Tracking und keine Cookies.
 - **Einzige Verbindung zu einem fremden Dienst:** die optionale Online-Prüfung der Jahre (Interpret + Titel an musicbrainz.org).

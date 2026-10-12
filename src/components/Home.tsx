@@ -78,7 +78,7 @@ export function Home({ decks, game, onResume, onDiscardGame, onPlay, onOpenDeck,
               <li key={deck.id} className="deck-card">
                 <div className="deck-card__head">
                   <span className={`tag tag--${deck.kind}`}>
-                    {deck.kind === 'demo' ? 'Beispiel' : deck.kind === 'local-audio' ? 'Eigene Audiodateien' : 'Liste'}
+                    {deck.kind === 'demo' ? 'Beispiel' : deck.kind === 'builtin' ? 'Fest eingebaut' : deck.kind === 'local-audio' ? 'Eigene Audiodateien' : 'Nur auf diesem Gerät'}
                   </span>
                   <h3>{deck.name}</h3>
                 </div>
@@ -96,7 +96,7 @@ export function Home({ decks, game, onResume, onDiscardGame, onPlay, onOpenDeck,
                     Spielen
                   </button>
                   <button type="button" className="btn btn--ghost" onClick={() => onOpenDeck(deck.id)}>
-                    {deck.kind === 'demo' ? 'Ansehen' : 'Jahre prüfen & bearbeiten'}
+                    {deck.kind === 'demo' || deck.kind === 'builtin' ? 'Ansehen' : 'Jahre prüfen & bearbeiten'}
                   </button>
                 </div>
               </li>
