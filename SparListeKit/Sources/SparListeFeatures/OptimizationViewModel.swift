@@ -18,6 +18,8 @@ public final class OptimizationViewModel {
     public private(set) var checkedItemIDs: Set<UUID> = []
     public private(set) var listName = ""
     public private(set) var priceSourceName = ""
+    /// Ladennamen nach ID (z. B. für Alternativvorschläge in fremden Läden).
+    public private(set) var storeNames: [String: String] = [:]
     public var actionError: String?
 
     private let dependencies: AppDependencies
@@ -46,6 +48,7 @@ public final class OptimizationViewModel {
             let includedIDs = Set(stores.filter(\.isIncluded).map(\.id))
             let prices = try await dependencies.prices.priceEntries(forStoreIDs: includedIDs)
             listName = list.name
+            storeNames = Dictionary(stores.map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
             priceSourceName = dependencies.prices.descriptor.name
             checkedItemIDs = Set(list.items.filter(\.isChecked).map(\.id))
 

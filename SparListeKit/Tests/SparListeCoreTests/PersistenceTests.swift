@@ -86,3 +86,26 @@ final class PersistenceTests: XCTestCase {
         XCTAssertThrowsError(try JSONPriceImporter().decode(Data("kein json".utf8), existingCatalog: Catalog()))
     }
 }
+
+final class ReadmeExampleTests: XCTestCase {
+    /// Das JSON-Importbeispiel im README muss vom Importer akzeptiert werden.
+    func testReadmeImportExampleDecodes() throws {
+        let readme = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent() // SparListeCoreTests
+            .deletingLastPathComponent() // Tests
+            .deletingLastPathComponent() // SparListeKit
+            .deletingLastPathComponent() // Repository
+            .appendingPathComponent("README.md")
+        guard let text = try? String(contentsOf: readme, encoding: .utf8) else {
+            throw XCTSkip("README.md nicht gefunden")
+        }
+        let start = try XCTUnwrap(text.range(of: "```json\n"))
+        let end = try XCTUnwrap(text.range(of: "\n```", range: start.upperBound..<text.endIndex))
+        let json = String(text[start.upperBound..<end.lowerBound])
+        let payload = try JSONPriceImporter().decode(Data(json.utf8), existingCatalog: Catalog())
+        XCTAssertEqual(payload.brands.count, 1)
+        XCTAssertEqual(payload.products.first?.packageSize, Quantity(250, .gram))
+        XCTAssertEqual(payload.prices.count, 2)
+        XCTAssertTrue(payload.prices[1].isOffer)
+    }
+}

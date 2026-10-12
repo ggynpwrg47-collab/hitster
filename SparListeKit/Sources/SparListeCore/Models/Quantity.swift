@@ -59,7 +59,7 @@ public struct Quantity: Hashable, Codable, Sendable {
         "\(Quantity.formatNumber(value)) \(unit.symbol)"
     }
 
-    static func formatNumber(_ value: Double) -> String {
+    public static func formatNumber(_ value: Double) -> String {
         if value.rounded() == value {
             return String(Int(value))
         }
