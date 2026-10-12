@@ -10,9 +10,10 @@ const files = import.meta.glob<unknown>('../decks/*.json', { eager: true, import
 export function loadBuiltinDecks(): Deck[] {
   const decks: Deck[] = [];
   for (const [path, data] of Object.entries(files)) {
-    const fileName = path.split('/').pop()!.replace(/\.json$/, '').replace(/\.jahrgang$/, '');
+    const file = path.split('/').pop()!;
+    const fileName = file.replace(/\.json$/, '').replace(/\.jahrgang$/, '');
     const deck = deckFromData(data, { id: `builtin_${fileName.replace(/[^A-Za-z0-9_-]/g, '_')}`, kind: 'builtin' });
-    if (deck) decks.push({ ...deck, createdAt: 0, updatedAt: 0 });
+    if (deck) decks.push({ ...deck, createdAt: 0, updatedAt: 0, published: { file, at: 0 } });
     else console.warn(`Eingebaute Liste „${path}“ ist kein gültiges Jahrgang-Format und wurde übersprungen.`);
   }
   return decks.sort((a, b) => a.name.localeCompare(b.name, 'de'));

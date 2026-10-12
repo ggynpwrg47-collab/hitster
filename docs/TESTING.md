@@ -46,6 +46,8 @@ Jahrgang hat bewusst **keinen** Login (siehe [SPOTIFY.md](SPOTIFY.md)). Zu prüf
 
 7. *Export & eingebaute Listen*: Liste → „Exportieren (für alle Geräte)“ lädt `name.jahrgang.json`. Diese Datei unter „CSV-/Textdatei“ wieder importieren → identische Liste. Datei nach `src/decks/` kopieren, `npm run build && npm run preview`, in einem privaten Fenster öffnen → Liste erscheint als „Fest eingebaut“, ist schreibgeschützt, lässt sich spielen und kopieren.
 
+8. *Fest einbauen*: Ohne Token → Dialog „Einmalig GitHub verbinden“. Unter Info & Datenschutz Repository, Branch und einen Fine-grained Token (nur dieses Repo, Contents: Read and write) eintragen → „Speichern & Verbindung testen“ meldet „Verbunden mit …“. Falscher Token → „ungültig oder abgelaufen“. In einer Liste „📌 Fest einbauen“ → Bestätigung zeigt `src/decks/<name>.jahrgang.json` → „Gespeichert ✓“ mit Link zum Commit; auf GitHub liegt die Datei. Nach dem Netlify-Build auf dem Handy neu laden → Liste „Fest eingebaut“; am PC ist die lokale Liste ausgeblendet. „Aus der App entfernen“ löscht die Datei wieder.
+
 ### C. Jahreszahlen
 1. In der Prüfansicht ein Jahr ändern und Enter drücken: Der Song gilt als geprüft, die Quelle wird „manuell eingetragen“.
 2. „Angezeigte bestätigen“ bestätigt nur die gefilterten Songs mit Jahr.

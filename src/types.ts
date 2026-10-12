@@ -56,6 +56,8 @@ export interface Deck {
   songs: Song[];
   createdAt: number;
   updatedAt: number;
+  /** Fest in die App eingebaut als Datei src/decks/<file> (bei eigenen Listen: Stand der letzten Veröffentlichung). */
+  published?: { file: string; at: number };
 }
 
 export type GameMode = 'timeline' | 'year';

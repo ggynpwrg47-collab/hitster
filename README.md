@@ -228,7 +228,22 @@ die korrekte Einrichtung: Authorization Code mit PKCE ohne Secret, minimale Scop
 Importierte Listen werden im **Browser des jeweiligen Geräts** gespeichert (`localStorage`). Was du am PC importierst,
 ist am Handy deshalb zunächst nicht da. Es gibt bewusst keinen Server und kein Konto, das Listen abgleicht.
 
-**Lösung: Listen fest in die App einbauen**
+**Am einfachsten: per Klick fest einbauen**
+1. Einmalig unter *Info & Datenschutz → Listen fest einbauen (GitHub)* einen GitHub-Token einrichten. Die Anleitung steht
+   dort. Kurz: Bei GitHub einen **Fine-grained personal access token** erstellen, mit Zugriff **nur auf dieses Repository**
+   und nur **Contents: Read and write**, z. B. 90 Tage gültig. Repository und Branch sind auf Netlify automatisch vorausgefüllt.
+2. In einer Liste auf **„📌 Fest einbauen (alle Geräte)“** klicken und bestätigen. Jahrgang speichert die Liste als
+   `src/decks/<name>.jahrgang.json` im Repository.
+3. Netlify baut automatisch neu. Nach 1–2 Minuten ist die Liste auf allen Geräten da. Auf dem PC wird die lokale Liste dann
+   automatisch ausgeblendet, damit sie nicht doppelt erscheint.
+4. Spätere Änderungen: Liste bearbeiten → **„📌 Änderungen fest einbauen“**. Bei eingebauten Listen: „Als eigene Liste
+   kopieren“, bearbeiten, „Änderungen fest einbauen“ (ersetzt das Original). Entfernen: in der eingebauten Liste
+   **„Aus der App entfernen“**.
+
+Der Token liegt nur im Browser dieses Geräts (nicht im Code, nicht auf Netlify) und wird nur an `api.github.com` gesendet.
+Richte ihn nur auf deinem eigenen Gerät ein und entferne ihn dort, wenn du ihn nicht mehr brauchst.
+
+**Alternativ von Hand**
 1. Am PC die Liste importieren, die Jahre prüfen (gern mit „Jahre online prüfen“).
 2. In der Liste auf **„⤓ Exportieren (für alle Geräte)“** klicken. Es wird eine Datei wie `roadtrip-mix.jahrgang.json` gespeichert.
 3. Die Datei in den Ordner **`src/decks/`** im Repository legen. Am einfachsten auf GitHub im Browser: Ordner `src/decks`

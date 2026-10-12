@@ -4,6 +4,7 @@ import { createGame, gameReducer, type GameAction } from './lib/game';
 import type { GameState } from './types';
 import { createDemoDeck } from './lib/demoDeck';
 import { loadBuiltinDecks } from './lib/builtinDecks';
+import { forgetGitHub } from './lib/github';
 import { storage, type Prefs } from './lib/storage';
 import { randomSeed } from './lib/random';
 import { Home } from './components/Home';
@@ -78,6 +79,12 @@ export default function App() {
   );
 
   const deckById = useMemo(() => new Map(decks.map((d) => [d.id, d])), [decks]);
+  const builtinFiles = useMemo(() => new Set(decks.filter((d) => d.kind === 'builtin').map((d) => d.published!.file)), [decks]);
+  // Eigene Listen ausblenden, sobald sie unverändert als eingebaute Liste vorliegen (keine Doppelten).
+  const visibleDecks = useMemo(
+    () => decks.filter((d) => !(d.kind === 'list' && d.published && builtinFiles.has(d.published.file) && d.updatedAt <= d.published.at)),
+    [decks, builtinFiles],
+  );
 
   let content: React.ReactNode;
   switch (view.name) {
@@ -102,6 +109,8 @@ export default function App() {
           onBack={() => setView({ name: 'home' })}
           onPlay={() => setView({ name: 'setup', deckId: deck.id })}
           onOpenDeck={(id) => setView({ name: 'deck', deckId: id })}
+          builtinFiles={builtinFiles}
+          onOpenSettings={() => setView({ name: 'info' })}
         />
       ) : (
         <Missing onBack={() => setView({ name: 'home' })} />
@@ -151,6 +160,7 @@ export default function App() {
           onBack={() => setView({ name: 'home' })}
           onClearAll={() => {
             storage.clearAll();
+            forgetGitHub();
             setDecks([createDemoDeck(), ...loadBuiltinDecks()]);
             setPrefs(storage.loadPrefs());
             dispatch({ type: 'load', state: null });
@@ -162,7 +172,7 @@ export default function App() {
     default:
       content = (
         <Home
-          decks={decks}
+          decks={visibleDecks}
           game={game}
           onResume={() => setView({ name: 'game' })}
           onDiscardGame={() => dispatch({ type: 'load', state: null })}

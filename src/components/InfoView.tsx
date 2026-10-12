@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Prefs } from '../lib/storage';
 import type { OpenIn, SearchProvider } from '../lib/links';
 import { ConfirmDialog } from './Dialog';
+import { GitHubSettings } from './GitHubSettings';
 
 export function AlbumDateNote() {
   return (
@@ -100,6 +101,8 @@ export function InfoView({ prefs, onPrefs, onBack, onClearAll }: Props) {
 
       <AlbumDateNote />
 
+      <GitHubSettings />
+
       <section className="panel stack">
         <h2>Was wird wo gespeichert?</h2>
         <ul>
@@ -110,6 +113,10 @@ export function InfoView({ prefs, onPrefs, onBack, onClearAll }: Props) {
           <li>
             <strong>Nicht gespeichert:</strong> Audiodateien (nur im Arbeitsspeicher des Tabs), Passwörter, Tokens,
             Konten. Es gibt keinen Server, kein Tracking, keine Cookies, keine Werbung.
+          </li>
+          <li>
+            <strong>Nur wenn du „Fest einbauen“ einrichtest:</strong> dein GitHub-Token liegt in diesem Browser; eingebaute
+            Listen liegen im Repository und sind Teil der veröffentlichten Seite.
           </li>
           <li>
             Die App lädt keine Inhalte von Drittservern. Ausnahme: Startest du in der Prüfansicht „Jahre online prüfen“,
