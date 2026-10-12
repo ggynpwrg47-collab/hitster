@@ -115,11 +115,27 @@ npm run preview     # Build lokal ausliefern: http://127.0.0.1:4173
 Jahrgang besteht nur aus statischen Dateien (`dist/`), daher eignet sich jeder kostenlose Static-Hoster.
 Alle folgenden Anbieter liefern automatisch **HTTPS**, was für die PWA-Installation nötig ist.
 
-**Netlify (empfohlen, am einfachsten)**
-1. Repository bei GitHub hochladen.
-2. Auf netlify.com „Add new site → Import from Git“ wählen.
-3. Build command `npm run build`, Publish directory `dist`.
-4. Die Sicherheits-Header aus `public/_headers` werden automatisch übernommen.
+**Netlify (empfohlen, am einfachsten, kostenlos)**
+1. Auf [netlify.com](https://www.netlify.com) mit dem GitHub-Konto anmelden.
+2. **„Add new site → Import an existing project → GitHub“** wählen und das Repository auswählen. Bei der ersten Verbindung
+   fragt GitHub, auf welche Repositorys Netlify zugreifen darf; nur dieses eine freigeben reicht.
+3. Unter **„Branch to deploy“** den Branch mit der App wählen (z. B. `main`).
+4. Build-Einstellungen nicht ändern. Sie kommen automatisch aus `netlify.toml` (`npm run build`, Ordner `dist`, Node 22).
+5. **„Deploy“** klicken. Nach etwa einer Minute steht die Seite unter `https://<zufallsname>.netlify.app`.
+6. Optional unter **Site configuration → Change site name** einen eigenen Namen wählen. Ein schwer zu erratender Name
+   (z. B. `jahrgang-k7q2`) ist besser als `jahrgang`.
+7. Jeder neue Push auf den Branch wird automatisch veröffentlicht.
+
+Sicherheits-Header aus `public/_headers` werden automatisch übernommen.
+
+**Wer kann die Seite sehen?**
+- Jeder, der die Adresse kennt. Sie ist aber nirgends verlinkt und für Suchmaschinen gesperrt: `noindex` steht als
+  Meta-Tag in `index.html` und als `X-Robots-Tag`-Header in `public/_headers`.
+- Deine Song-Listen, Spielstände und Einstellungen liegen **nicht** auf Netlify, sondern nur im Browser des jeweiligen
+  Geräts. Wer die Adresse kennt, sieht nur die leere App mit dem Beispiel-Deck.
+- Ein echter Passwortschutz ist bei Netlify kostenpflichtig. Kostenlos geht das mit Cloudflare Pages und
+  [Cloudflare Access](https://www.cloudflare.com/zero-trust/products/access/): erlaubte E-Mail-Adressen eintragen, Zugang
+  per Einmal-Code.
 
 **Cloudflare Pages:** gleiche Einstellungen (Framework „Vite“, Ausgabe `dist`); `_headers` wird ebenfalls unterstützt.
 
