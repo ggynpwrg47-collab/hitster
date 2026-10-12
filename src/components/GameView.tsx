@@ -3,7 +3,7 @@ import type { DeckKind, GameState, PlayerState } from '../types';
 import { activePlayer, currentSong, describeGap, vetoBlockReason, type GameAction } from '../lib/game';
 import { formatDate, precisionLabel } from '../lib/years';
 import { randomSeed } from '../lib/random';
-import type { SearchProvider } from '../lib/links';
+import type { OpenIn, SearchProvider } from '../lib/links';
 import { Timeline } from './Timeline';
 import { YearPicker } from './YearPicker';
 import { Playback } from './Playback';
@@ -15,6 +15,7 @@ interface Props {
   game: GameState;
   dispatch: (a: GameAction) => void;
   searchProvider: SearchProvider;
+  openIn: OpenIn;
   deckKind: DeckKind;
   onMenu: () => void;
   onNewGame: () => void;
@@ -28,7 +29,7 @@ type Confirm =
   | { kind: 'peek' }
   | null;
 
-export function GameView({ game, dispatch, searchProvider, onMenu, onNewGame }: Props) {
+export function GameView({ game, dispatch, searchProvider, openIn, onMenu, onNewGame }: Props) {
   const [confirm, setConfirm] = useState<Confirm>(null);
   const [vetoer, setVetoer] = useState<string | null>(null);
   const [vetoYear, setVetoYear] = useState<number | null>(null);
@@ -144,7 +145,7 @@ export function GameView({ game, dispatch, searchProvider, onMenu, onNewGame }: 
               </>
             )}
           </div>
-          <Playback song={song} searchProvider={searchProvider} revealed={phase === 'revealed'} />
+          <Playback song={song} searchProvider={searchProvider} openIn={openIn} revealed={phase === 'revealed'} />
           {phase !== 'revealed' && !song.fileName && (
             <button type="button" className="link-btn small" onClick={() => setConfirm({ kind: 'peek' })}>
               Spielleitung: Song anzeigen (ohne Jahr)
@@ -330,6 +331,9 @@ export function GameView({ game, dispatch, searchProvider, onMenu, onNewGame }: 
                 Erschienen: <strong>{formatDate(song)}</strong> <span className="muted">({precisionLabel(song.precision)})</span>
                 {song.album && <span className="muted"> · Album: {song.album}</span>}
               </p>
+              {song.online?.year !== undefined && song.online.year !== song.year && (
+                <p className="small">🔎 Laut MusicBrainz erstmals erschienen: {song.online.year}</p>
+              )}
               {(song.warnings.length > 0 || !song.confirmed) && (
                 <p className="warn-text small">
                   ⚠ Jahr unsicher{song.warnings.length > 0 ? `: ${song.warnings.join('; ')}` : ' (nicht geprüft)'}

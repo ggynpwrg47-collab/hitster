@@ -1,5 +1,5 @@
 import type { Deck, GameState, PlayerSetup, GameSettings } from '../types';
-import type { SearchProvider } from './links';
+import type { OpenIn, SearchProvider } from './links';
 
 /**
  * Alles wird ausschließlich lokal im Browser (localStorage) gespeichert:
@@ -35,6 +35,7 @@ export interface Prefs {
   players: PlayerSetup[];
   settings: GameSettings | null;
   searchProvider: SearchProvider;
+  openIn: OpenIn;
   lastDeckId: string | null;
   rulesSeen: boolean;
 }
@@ -43,6 +44,7 @@ export const DEFAULT_PREFS: Prefs = {
   players: [],
   settings: null,
   searchProvider: 'spotify',
+  openIn: 'app',
   lastDeckId: null,
   rulesSeen: false,
 };

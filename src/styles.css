@@ -1321,3 +1321,30 @@ legend {
     transition: none !important;
   }
 }
+
+/* ===== Online-Prüfung ===== */
+.progress--wide {
+  max-width: none;
+  height: 10px;
+}
+.online {
+  font-size: 0.9rem;
+}
+.online--differs {
+  background: var(--veto-bg);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.75rem;
+  display: grid;
+  gap: 0.4rem;
+}
+.online--ok {
+  color: var(--good);
+}
+kbd {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 0 0.3em;
+}

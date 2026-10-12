@@ -106,6 +106,11 @@ const COMPILATION_HINTS = /\b(greatest hits|best of|the best|hits|collection|ess
 export function detectYearWarnings(song: Pick<Song, 'title' | 'album' | 'year' | 'yearSource'>, fuzzy = false): string[] {
   const warnings: string[] = [];
   if (song.year === null) warnings.push('Kein Jahr bekannt – bitte eintragen');
+  // Von Hand eingetragene oder online geprüfte Jahre beziehen sich bewusst auf das Original –
+  // Hinweise auf Remaster/Live/Compilation im Titel sind dann erledigt.
+  if (song.year !== null && (song.yearSource === 'manual' || song.yearSource === 'online')) {
+    return song.year > maxYear() ? ['Jahr liegt in der Zukunft'] : [];
+  }
   if (fuzzy) warnings.push('Ungenaue Jahresangabe in der Quelle');
   const texts = [song.title, song.album ?? ''];
   for (const [re, msg] of VERSION_HINTS) {
@@ -160,5 +165,6 @@ export function isPlayable(song: Song): boolean {
 }
 
 export function needsReview(song: Song): boolean {
+  if (song.online?.status === 'differs') return true;
   return !song.confirmed && (song.warnings.length > 0 || song.yearSource === 'album-date' || song.yearSource === 'tag');
 }

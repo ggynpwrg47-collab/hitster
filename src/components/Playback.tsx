@@ -1,19 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import type { Song } from '../types';
-import { linkHostLabel, searchLink, type SearchProvider } from '../lib/links';
+import { linkHostLabel, searchLink, spotifyAppUri, type OpenIn, type SearchProvider } from '../lib/links';
 import { useAudioFiles } from './audioFiles';
 import { Dialog } from './Dialog';
 
 interface Props {
   song: Song;
   searchProvider: SearchProvider;
+  openIn: OpenIn;
   revealed: boolean;
 }
 
-export function Playback({ song, searchProvider, revealed }: Props) {
+export function Playback({ song, searchProvider, openIn, revealed }: Props) {
   if (song.fileName) return <LocalAudio key={song.id} song={song} />;
-  return <LinkPlayback key={song.id} song={song} searchProvider={searchProvider} revealed={revealed} />;
+  return <LinkPlayback key={song.id} song={song} searchProvider={searchProvider} openIn={openIn} revealed={revealed} />;
 }
 
 function fmt(sec: number): string {
@@ -113,7 +114,7 @@ function LocalAudio({ song }: { song: Song }) {
   );
 }
 
-function LinkPlayback({ song, searchProvider, revealed }: Props) {
+function LinkPlayback({ song, searchProvider, openIn, revealed }: Props) {
   const link = song.link ?? searchLink(searchProvider, song.artist, song.title);
   const isSearch = !song.link;
   const [qr, setQr] = useState<string | null>(null);
@@ -142,18 +143,39 @@ function LinkPlayback({ song, searchProvider, revealed }: Props) {
   }
 
   const label = linkHostLabel(link);
+  const appUri = openIn === 'app' ? spotifyAppUri(song.link, searchProvider, song.artist, song.title) : undefined;
+  const openInBrowser = () => window.open(link, '_blank', 'noopener,noreferrer');
+  // „spotify:“-Adressen öffnen die installierte Spotify-App direkt, ohne neuen Browser-Tab.
+  const openInApp = () => {
+    if (appUri) window.location.href = appUri;
+  };
   return (
     <div className="playback playback--link">
       <div className="row wrap">
         {/* Button statt <a>, damit der Link (bei Suchlinks inkl. Titel) beim Überfahren nicht in der Statusleiste erscheint. */}
-        <button type="button" className="btn btn--primary btn--large" onClick={() => window.open(link, '_blank', 'noopener,noreferrer')}>
-          ▶ {isSearch ? `In ${label} suchen & abspielen` : `In ${label} öffnen`}
-          <span className="sr-only"> (öffnet in neuem Fenster)</span>
-        </button>
+        {appUri ? (
+          <button type="button" className="btn btn--primary btn--large" onClick={openInApp}>
+            ▶ {isSearch ? 'In der Spotify-App suchen' : 'In der Spotify-App öffnen'}
+          </button>
+        ) : (
+          <button type="button" className="btn btn--primary btn--large" onClick={openInBrowser}>
+            ▶ {isSearch ? `In ${label} suchen & abspielen` : `In ${label} öffnen`}
+            <span className="sr-only"> (öffnet in neuem Fenster)</span>
+          </button>
+        )}
         <button type="button" className="btn btn--secondary" onClick={() => setShowQr(true)}>
           QR-Code für zweites Gerät
         </button>
       </div>
+      {appUri && (
+        <p className="muted small">
+          Spotify kommt dabei in den Vordergrund – mit <kbd>Alt</kbd>+<kbd>Tab</kbd> (Mac: <kbd>⌘</kbd>+<kbd>Tab</kbd>) zurück zum
+          Spiel. Nichts passiert?{' '}
+          <button type="button" className="link-btn" onClick={openInBrowser}>
+            Im Browser öffnen
+          </button>
+        </p>
+      )}
       {!revealed && (
         <p className="muted small">
           Die Musik-App zeigt den Titel an. Legt das Gerät verdeckt hin oder lasst eine Person, die gerade nicht rät, den Song

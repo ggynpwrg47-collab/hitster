@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Prefs } from '../lib/storage';
-import type { SearchProvider } from '../lib/links';
+import type { OpenIn, SearchProvider } from '../lib/links';
 import { ConfirmDialog } from './Dialog';
 
 export function AlbumDateNote() {
@@ -74,6 +74,17 @@ export function InfoView({ prefs, onPrefs, onBack, onClearAll }: Props) {
           </li>
         </ul>
         <div className="field">
+          <label htmlFor="open-in">Spotify-Songs öffnen in</label>
+          <select id="open-in" value={prefs.openIn} onChange={(e) => onPrefs({ ...prefs, openIn: e.target.value as OpenIn })}>
+            <option value="app">der Spotify-App (Desktop/Handy) – kein neuer Browser-Tab</option>
+            <option value="browser">einem neuen Browser-Tab (Spotify-Webplayer)</option>
+          </select>
+          <span className="muted small">
+            Beim ersten Mal fragt der Browser, ob er Spotify öffnen darf – „Immer erlauben“ anhaken, dann klappt es künftig
+            ohne Nachfrage. Dass Spotify dabei in den Vordergrund kommt, kann eine Web-App nicht verhindern.
+          </span>
+        </div>
+        <div className="field">
           <label htmlFor="search-provider">Suchlink für Songs ohne eigenen Link</label>
           <select
             id="search-provider"
@@ -100,7 +111,11 @@ export function InfoView({ prefs, onPrefs, onBack, onClearAll }: Props) {
             <strong>Nicht gespeichert:</strong> Audiodateien (nur im Arbeitsspeicher des Tabs), Passwörter, Tokens,
             Konten. Es gibt keinen Server, kein Tracking, keine Cookies, keine Werbung.
           </li>
-          <li>Die App lädt keine Inhalte von Drittservern. Externe Seiten öffnen sich nur, wenn du einen Link antippst.</li>
+          <li>
+            Die App lädt keine Inhalte von Drittservern. Ausnahme: Startest du in der Prüfansicht „Jahre online prüfen“,
+            werden Interpret und Titel an <strong>musicbrainz.org</strong> gesendet. Externe Seiten öffnen sich nur, wenn du
+            einen Link antippst.
+          </li>
         </ul>
         <button type="button" className="btn btn--danger-ghost" onClick={() => setConfirmClear(true)}>
           Alle lokalen Daten löschen

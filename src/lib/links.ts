@@ -1,6 +1,8 @@
 /** Hilfsfunktionen für Abspiel-Links. Es werden nur normale Web-Links geöffnet – keine API-Aufrufe. */
 
 export type SearchProvider = 'spotify' | 'youtube' | 'none';
+/** Spotify-Links in der installierten Spotify-App (spotify:-Adresse) oder im Browser öffnen. */
+export type OpenIn = 'app' | 'browser';
 
 /** Akzeptiert nur http(s)-Links; wandelt "spotify:track:ID" in einen normalen Web-Link um. */
 export function normalizeLink(raw: string | undefined | null): string | undefined {
@@ -41,4 +43,24 @@ export function linkHostLabel(link: string): string {
   } catch {
     return 'Link';
   }
+}
+
+/**
+ * Wandelt einen Spotify-Web-Link in eine „spotify:“-Adresse um, die direkt die installierte Spotify-App öffnet
+ * (kein neuer Browser-Tab). Ohne Link wird – bei Spotify als Suchdienst – eine Suche in der App geöffnet.
+ */
+export function spotifyAppUri(link: string | undefined, provider: SearchProvider, artist: string, title: string): string | undefined {
+  if (link) {
+    try {
+      const url = new URL(link);
+      if (!url.hostname.endsWith('open.spotify.com')) return undefined;
+      const m = url.pathname.match(/^\/(?:intl-[a-z-]+\/)?(track|album|playlist|episode)\/([A-Za-z0-9]{10,40})/);
+      return m ? `spotify:${m[1]}:${m[2]}` : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+  if (provider !== 'spotify') return undefined;
+  const q = `${artist} ${title}`.trim();
+  return q ? `spotify:search:${encodeURIComponent(q)}` : undefined;
 }

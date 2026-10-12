@@ -49,6 +49,9 @@ describe('Warnungen', () => {
     expect(detectYearWarnings({ title: 'Song (Live)', year: 1990, yearSource: 'list' }).join()).toMatch(/Live/);
     expect(detectYearWarnings({ title: 'Song', album: 'Greatest Hits', year: 2001, yearSource: 'list' }).join()).toMatch(/Compilation/);
     expect(detectYearWarnings({ title: 'Song', year: 1999, yearSource: 'list' })).toEqual([]);
+    // Bewusst eingetragene bzw. online geprüfte Jahre brauchen keine Remaster-Warnung mehr
+    expect(detectYearWarnings({ title: 'Song - 2011 Remaster', year: 1975, yearSource: 'online' })).toEqual([]);
+    expect(detectYearWarnings({ title: 'Song (Live)', year: 1975, yearSource: 'manual' })).toEqual([]);
   });
 
   it('Albumdatum muss immer geprüft werden', () => {

@@ -9,7 +9,21 @@ export type YearSource =
   | 'tag-original' // Audio-Datei: Original-Veröffentlichung (ID3 TDOR/TORY)
   | 'tag' // Audio-Datei: Aufnahme-/Veröffentlichungsdatum dieser Datei (ID3 TDRC/TYER)
   | 'filename' // aus dem Dateinamen gelesen
-  | 'demo'; // mitgeliefertes Beispiel-Deck
+  | 'demo' // mitgeliefertes Beispiel-Deck
+  | 'online'; // aus der Online-Prüfung (MusicBrainz, Erstveröffentlichung der Aufnahme)
+
+/** Ergebnis der optionalen Online-Prüfung eines Songs. */
+export interface OnlineCheck {
+  /** match = gleiches Jahr; differs = anderes Jahr (Vorschlag offen); filled = Jahr fehlte und wurde ergänzt;
+   *  kept = Abweichung gesehen, eigenes Jahr behalten; notfound = kein Treffer; error = Abruf fehlgeschlagen */
+  status: 'match' | 'differs' | 'filled' | 'kept' | 'notfound' | 'error';
+  year?: number;
+  date?: string;
+  precision?: DatePrecision;
+  /** Link zur gefundenen Aufnahme bei MusicBrainz (zum Nachprüfen). */
+  url?: string;
+  checkedAt: number;
+}
 
 export interface Song {
   id: string;
@@ -30,6 +44,7 @@ export interface Song {
   link?: string;
   /** Lokale Audiodatei (nur Dateiname; die Datei selbst wird nie gespeichert oder hochgeladen). */
   fileName?: string;
+  online?: OnlineCheck;
 }
 
 export type DeckKind = 'list' | 'local-audio' | 'demo';

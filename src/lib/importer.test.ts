@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { importText, parseCsv, parseFileName, parseLine } from './importer';
-import { normalizeLink, searchLink } from './links';
+import { normalizeLink, searchLink, spotifyAppUri } from './links';
 
 describe('parseCsv', () => {
   it('versteht Anführungszeichen, Kommas und Zeilenumbrüche in Feldern', () => {
@@ -63,6 +63,13 @@ describe('Links', () => {
     expect(normalizeLink('javascript:alert(1)')).toBeUndefined();
     expect(normalizeLink('http://example.com/x')).toBe('https://example.com/x');
     expect(normalizeLink('nonsense')).toBeUndefined();
+  });
+  it('wandelt Spotify-Links in App-Adressen um', () => {
+    expect(spotifyAppUri('https://open.spotify.com/track/4u7EnebtmKWzUH433cf5Qv?si=abc', 'spotify', 'a', 'b')).toBe('spotify:track:4u7EnebtmKWzUH433cf5Qv');
+    expect(spotifyAppUri('https://open.spotify.com/intl-de/track/4u7EnebtmKWzUH433cf5Qv', 'spotify', 'a', 'b')).toBe('spotify:track:4u7EnebtmKWzUH433cf5Qv');
+    expect(spotifyAppUri('https://www.youtube.com/watch?v=x', 'spotify', 'a', 'b')).toBeUndefined();
+    expect(spotifyAppUri(undefined, 'spotify', 'Queen', 'Bohemian Rhapsody')).toBe('spotify:search:Queen%20Bohemian%20Rhapsody');
+    expect(spotifyAppUri(undefined, 'youtube', 'Queen', 'X')).toBeUndefined();
   });
   it('baut Suchlinks ohne API', () => {
     expect(searchLink('spotify', 'Queen', 'Bohemian Rhapsody')).toBe('https://open.spotify.com/search/Queen%20Bohemian%20Rhapsody');

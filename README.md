@@ -42,6 +42,8 @@ ist eine installierbare Progressive Web App ohne Konto, Werbung oder Abo.
 | Eigene Listen per Text, CSV oder TSV (u. a. mit Spalten aus gängigen Playlist-Exporten) | ✅ ja | Qualität der Daten |
 | Eigene Spotify-Playlists aus dem offiziellen Spotify-Datenexport (JSON) einlesen | ✅ ja | Export muss bei Spotify angefordert werden; enthält keine Jahre |
 | Jahres-Prüfung: Genauigkeit, Warnungen bei Remaster/Live/Compilation/Duplikaten, Korrektur | ✅ ja | – |
+| Jahre online prüfen (MusicBrainz: früheste Veröffentlichung der Aufnahme, Vorschläge bei Abweichung) | ⚠️ meistens | Internet; Song muss in MusicBrainz erfasst sein; Datenqualität der Datenbank |
+| Spotify-Songs direkt in der Spotify-App öffnen (ohne neuen Browser-Tab) | ✅ ja | installierte Spotify-App; Browser fragt beim ersten Mal nach |
 | Eigene Audiodateien abspielen, ohne Titel zu verraten | ✅ ja | Dateiformat muss der Browser unterstützen (MP3/AAC überall) |
 | Song über Link/Suche in Spotify, YouTube o. Ä. öffnen | ⚠️ teilweise | Konto und Abo beim Dienst; die Dienst-App zeigt den Titel an |
 | QR-Code, um auf einem zweiten Gerät abzuspielen | ✅ ja | Kamera-App auf dem zweiten Gerät |
@@ -196,6 +198,12 @@ die korrekte Einrichtung: Authorization Code mit PKCE ohne Secret, minimale Scop
 - **Warnungen** erscheinen bei Remaster, Live, Remix/Edit, Neuaufnahme („Taylor's Version“), Deluxe-/Jubiläumsausgaben,
   Compilations („Greatest Hits“, „Best of“ …), unscharfen Angaben (`ca. 1975`, `1975/76`, `1975?`), Datei-Tags ohne
   Original-Datum, Duplikaten und widersprüchlichen Jahren.
+- **Online prüfen:** In der Prüfansicht unter *Jahre online prüfen* sucht Jahrgang in der offenen Datenbank
+  [MusicBrainz](https://musicbrainz.org) nach der frühesten Veröffentlichung einer Aufnahme mit gleichem Titel und
+  Interpreten. Zusätze wie „- Remastered 2011“, „(Live …)“ oder „(feat. …)“ werden vorher entfernt. Ergebnis:
+  ✓ bestätigt, fehlendes Jahr ergänzt, oder bei Abweichung ein Vorschlag („1975 übernehmen“ / „2011 behalten“, auch
+  „Alle Vorschläge übernehmen“). Es werden nur Interpret und Titel gesendet, mit höchstens 1 Anfrage pro Sekunde
+  (Vorgabe von MusicBrainz). Die Prüfung startet nur auf Knopfdruck.
 - In der **Prüfansicht** korrigiert oder bestätigt man die Jahre; ein von Hand eingetragenes Jahr gilt als geprüft.
   Songs ohne Jahr werden nicht gespielt. Beim Aufdecken ungeprüfter oder gewarnter Songs erscheint „⚠ Jahr unsicher“.
 
@@ -220,6 +228,7 @@ die korrekte Einrichtung: Authorization Code mit PKCE ohne Secret, minimale Scop
 - **Lokal im Browser** (`localStorage`): eigene Song-Listen, Einstellungen, Spielernamen und ein laufendes Spiel.
 - **Nicht gespeichert:** Audiodateien (nur im Arbeitsspeicher), Passwörter, Tokens, Konten. Es gibt keinen Server,
   kein Tracking und keine Cookies.
+- **Einzige Verbindung zu einem fremden Dienst:** die optionale Online-Prüfung der Jahre (Interpret + Titel an musicbrainz.org).
 - Unter *Info & Datenschutz → Alle lokalen Daten löschen* lässt sich alles entfernen.
 - Die Ergebnisse der Sicherheitsprüfung (Secrets, Tokens, Scopes, Redirects, CSP, Links) stehen in [docs/SECURITY.md](docs/SECURITY.md).
 
@@ -235,6 +244,9 @@ die korrekte Einrichtung: Authorization Code mit PKCE ohne Secret, minimale Scop
 | Audiodatei spielt nicht | Format prüfen (MP3/AAC funktionieren überall; FLAC/OGG nicht in jedem Safari). Nach dem Neuladen Dateien erneut auswählen. |
 | Song-Link öffnet die falsche Version | In der Prüfansicht einen direkten Link zur Originalversion eintragen. |
 | Jahre wirken falsch | Prüfansicht → Filter „Zu prüfen“. Album- und Remaster-Daten korrigieren. |
+| Klick auf „In der Spotify-App öffnen“ bewirkt nichts | Spotify-Desktop-App installiert? Beim ersten Mal die Browser-Nachfrage „Spotify öffnen?“ bestätigen. Sonst den Link „Im Browser öffnen“ nutzen oder unter *Info & Datenschutz* auf „Browser-Tab“ umstellen. |
+| Spotify kommt beim Abspielen in den Vordergrund und zeigt den Titel | Lässt sich aus einer Web-App nicht verhindern. Mit Alt+Tab (Mac: ⌘+Tab) zurück, oder die Musik per QR-Code auf einem Handy abspielen, das verdeckt liegt. |
+| Online-Prüfung meldet nur Fehler | Internetverbindung prüfen; manche Werbeblocker oder Firmennetze sperren musicbrainz.org. Bei Überlastung später erneut versuchen. |
 | Spotify verlangt beim Öffnen eines Links ein Login/Abo | Das entscheidet Spotify. Alternativ unter *Info & Datenschutz* die YouTube-Suche wählen oder eigene Audiodateien nutzen. |
 | Daten sind weg | Privates Fenster oder gelöschte Browserdaten leeren `localStorage`. Song-Listen am besten auch als Text/CSV aufbewahren. |
 | Seite bleibt auf GitHub Pages leer | Ist `VITE_BASE_PATH` auf `/<repo-name>/` gesetzt? Der mitgelieferte Workflow erledigt das automatisch. |

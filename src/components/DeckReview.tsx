@@ -6,6 +6,8 @@ import { uid } from '../lib/random';
 import { ConfirmDialog } from './Dialog';
 import { useAudioFiles } from './audioFiles';
 import { AlbumDateNote } from './InfoView';
+import { OnlineCheckPanel } from './OnlineCheckPanel';
+import { acceptSuggestion, keepOwnYear } from '../lib/onlineCheck';
 
 interface Props {
   deck: Deck;
@@ -26,6 +28,7 @@ const SOURCE_LABEL: Record<Song['yearSource'], string> = {
   tag: 'Datei-Tag „Jahr“ – evtl. Neuauflage',
   filename: 'aus dem Dateinamen',
   demo: 'Beispiel-Deck',
+  online: 'Online-Prüfung (MusicBrainz, Erstveröffentlichung)',
 };
 
 export function DeckReview({ deck, onChange, onDelete, onBack, onPlay, onOpenDeck }: Props) {
@@ -61,12 +64,14 @@ export function DeckReview({ deck, onChange, onDelete, onBack, onPlay, onOpenDec
   function setYear(song: Song, raw: string) {
     const p = parseDate(raw);
     // Ein von Hand eingetragenes Jahr gilt als geprüft.
+    const online = song.online?.status === 'differs' ? { ...song.online, status: p.year === song.online.year ? ('match' as const) : ('kept' as const) } : song.online;
     patchSong(song.id, {
       year: p.year,
       date: p.date,
       precision: p.precision,
       yearSource: 'manual',
       confirmed: p.year !== null,
+      online,
     });
   }
 
@@ -142,6 +147,8 @@ export function DeckReview({ deck, onChange, onDelete, onBack, onPlay, onOpenDec
           </label>
         </div>
       )}
+
+      {!readOnly && <OnlineCheckPanel deck={deck} onChange={onChange} />}
 
       <div className="row between wrap">
         <div role="group" aria-label="Filter" className="segmented">
@@ -254,6 +261,7 @@ export function DeckReview({ deck, onChange, onDelete, onBack, onPlay, onOpenDec
                 </span>
               </div>
               <div className="song-row__status">
+                {s.online && <OnlineInfo song={s} readOnly={readOnly} onAccept={() => update(deck.songs.map((x) => (x.id === s.id ? acceptSuggestion(x) : x)))} onKeep={() => update(deck.songs.map((x) => (x.id === s.id ? keepOwnYear(x) : x)))} />}
                 {s.warnings.length > 0 && (
                   <ul className="warnings">
                     {s.warnings.map((w) => (
@@ -268,7 +276,11 @@ export function DeckReview({ deck, onChange, onDelete, onBack, onPlay, onOpenDec
                         type="checkbox"
                         checked={s.confirmed}
                         disabled={s.year === null}
-                        onChange={(e) => patchSong(s.id, { confirmed: e.target.checked })}
+                        onChange={(e) =>
+                          e.target.checked && s.online?.status === 'differs'
+                            ? update(deck.songs.map((x) => (x.id === s.id ? keepOwnYear(x) : x)))
+                            : patchSong(s.id, { confirmed: e.target.checked })
+                        }
                       />
                       Jahr geprüft
                     </label>
@@ -309,4 +321,46 @@ export function DeckReview({ deck, onChange, onDelete, onBack, onPlay, onOpenDec
       />
     </div>
   );
+}
+
+function OnlineInfo({ song, readOnly, onAccept, onKeep }: { song: Song; readOnly: boolean; onAccept: () => void; onKeep: () => void }) {
+  const o = song.online!;
+  const shown = o.year !== undefined ? formatDate({ year: o.year, date: o.date, precision: o.precision ?? 'year' }) : '';
+  const source = o.url ? (
+    <a href={o.url} target="_blank" rel="noopener noreferrer">
+      MusicBrainz<span className="sr-only"> (öffnet in neuem Fenster)</span>
+    </a>
+  ) : (
+    'MusicBrainz'
+  );
+  switch (o.status) {
+    case 'differs':
+      return (
+        <div className="online online--differs">
+          <p>
+            🔎 Laut {source} erstmals erschienen: <strong>{shown}</strong> (eingetragen: {song.year ?? '–'})
+          </p>
+          {!readOnly && (
+            <div className="row wrap">
+              <button type="button" className="btn btn--small btn--primary" onClick={onAccept}>
+                {o.year} übernehmen
+              </button>
+              <button type="button" className="btn btn--small btn--ghost" onClick={onKeep}>
+                {song.year ?? 'Eigenes'} behalten
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    case 'match':
+      return <p className="online online--ok small">✓ Online bestätigt ({source}: {shown})</p>;
+    case 'filled':
+      return <p className="online online--ok small">✓ Jahr online ergänzt ({source}: {shown})</p>;
+    case 'kept':
+      return <p className="online small muted">Online abweichend ({source}: {shown}) – eigenes Jahr behalten</p>;
+    case 'notfound':
+      return <p className="online small muted">Online nicht gefunden – bitte selbst prüfen</p>;
+    default:
+      return <p className="online small muted">Online-Prüfung fehlgeschlagen</p>;
+  }
 }

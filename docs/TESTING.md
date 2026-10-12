@@ -51,6 +51,8 @@ Jahrgang hat bewusst **keinen** Login (siehe [SPOTIFY.md](SPOTIFY.md)). Zu prüf
 4. Ungültige Jahre (z. B. 3000 oder 1200) werden als „kein Jahr“ behandelt.
 5. Beim Aufdecken eines ungeprüften oder gewarnten Songs erscheint „⚠ Jahr unsicher“ samt Genauigkeit.
 
+6. *Jahre online prüfen*: Liste mit `Queen - Bohemian Rhapsody - Remastered 2011 (2011)`, `Toto - Africa` (ohne Jahr) und einem erfundenen Song → „Alle prüfen“. Erwartet: Fortschrittsbalken, danach Vorschlag „1975 übernehmen / 2011 behalten“, Africa erhält 1982 („online ergänzt“), der erfundene Song „nicht gefunden“. „Abbrechen“ stoppt sofort. Offline (DevTools → Offline): verständliche Fehlermeldung statt Absturz.
+
 ### D. Spielablauf
 1. Beispiel-Deck → *Spielen* → 3 Teams, Zeitleiste, 2 Runden, 2 Veto-Chips. Die Regeln sind beim ersten Mal aufgeklappt.
 2. Während des Ratens sind nirgends Titel, Interpret oder Jahr zu sehen (auch nicht beim Überfahren des Abspiel-Knopfs).
@@ -62,7 +64,8 @@ Jahrgang hat bewusst **keinen** Login (siehe [SPOTIFY.md](SPOTIFY.md)). Zu prüf
 8. *Überspringen* mit gesetztem Veto: Der Chip kommt zurück, und dasselbe Team zieht einen neuen Song.
 9. *Neu starten*: Punkte 0, je 1 Startkarte, Chips wieder auf Startwert. *Beenden* → Ergebnis mit Rangliste.
 10. Jahres-Modus: ±1/±10 und Eingabefeld funktionieren; Veto mit gleichem Jahr wird abgelehnt; ein näheres Veto übernimmt die Punkte.
-11. Seite mitten im Zug neu laden: *Spiel fortsetzen* stellt den exakten Stand inkl. Chips und Vetos wieder her.
+11. Spotify-Song mit Link: „In der Spotify-App öffnen“ öffnet die Desktop-App (beim ersten Mal Browser-Nachfrage), **kein** neuer Tab. „Im Browser öffnen“ öffnet den Webplayer. Unter *Info & Datenschutz* auf „Browser-Tab“ umstellen → Knopf öffnet wieder einen Tab.
+12. Seite mitten im Zug neu laden: *Spiel fortsetzen* stellt den exakten Stand inkl. Chips und Vetos wieder her.
 
 ### E. Mobile Ansicht und Bedienbarkeit
 1. DevTools → Gerätemodus (z. B. 390×844) oder ein echtes Handy: kein horizontales Scrollen, Zeitleiste vertikal, Aktionsknöpfe unten erreichbar.

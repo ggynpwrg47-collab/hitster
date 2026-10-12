@@ -129,6 +129,7 @@ export default function App() {
           game={game}
           dispatch={dispatch}
           searchProvider={prefs.searchProvider}
+          openIn={prefs.openIn}
           deckKind={deckById.get(game.deckId)?.kind ?? 'list'}
           onMenu={() => setView({ name: 'home' })}
           onNewGame={() => {
