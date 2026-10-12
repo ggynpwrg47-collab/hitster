@@ -42,6 +42,8 @@ Jahrgang hat bewusst **keinen** Login (siehe [SPOTIFY.md](SPOTIFY.md)). Zu prüf
 3. Leere Eingabe: Knopf ist deaktiviert. Datei über 5 MB: verständliche Fehlermeldung.
 4. *Eigene Audiodateien*: MP3s mit ID3-Tags wählen; Titel, Interpret und Jahr erscheinen. Dateien ohne Tags: Dateiname `Interpret - Titel (Jahr).mp3` wird gelesen. Seite neu laden: Hinweis „Datei nicht geladen“ und erneute Auswahl funktioniert.
 
+5. *Spotify-Datenexport*: `Playlist1.json` mit zwei Playlists wählen → beide erscheinen mit Songanzahl; Podcast-Folgen und lokale Dateien fehlen; nach „Übernehmen“ haben alle Songs einen Spotify-Link und stehen unter „Ohne Jahr“. Eine beliebige andere JSON-Datei ergibt eine verständliche Fehlermeldung.
+
 ### C. Jahreszahlen
 1. In der Prüfansicht ein Jahr ändern und Enter drücken: Der Song gilt als geprüft, die Quelle wird „manuell eingetragen“.
 2. „Angezeigte bestätigen“ bestätigt nur die gefilterten Songs mit Jahr.

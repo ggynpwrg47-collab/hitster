@@ -30,9 +30,9 @@ const SOURCE_LABEL: Record<Song['yearSource'], string> = {
 
 export function DeckReview({ deck, onChange, onDelete, onBack, onPlay, onOpenDeck }: Props) {
   const readOnly = deck.kind === 'demo';
-  const reviewCount = deck.songs.filter(needsReview).length;
   const missingCount = deck.songs.filter((s) => !isPlayable(s)).length;
-  const [filter, setFilter] = useState<Filter>(reviewCount > 0 && !readOnly ? 'review' : 'all');
+  const toReviewCount = deck.songs.filter((s) => needsReview(s) || !isPlayable(s)).length;
+  const [filter, setFilter] = useState<Filter>(toReviewCount > 0 && !readOnly ? 'review' : 'all');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const audio = useAudioFiles();
 
@@ -146,7 +146,7 @@ export function DeckReview({ deck, onChange, onDelete, onBack, onPlay, onOpenDec
       <div className="row between wrap">
         <div role="group" aria-label="Filter" className="segmented">
           <button type="button" aria-pressed={filter === 'review'} onClick={() => setFilter('review')}>
-            Zu prüfen ({reviewCount + missingCount})
+            Zu prüfen ({toReviewCount})
           </button>
           <button type="button" aria-pressed={filter === 'missing'} onClick={() => setFilter('missing')}>
             Ohne Jahr ({missingCount})

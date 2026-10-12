@@ -3,11 +3,12 @@ import type { Deck, Song } from '../types';
 import { createSong, importText, parseFileName } from '../lib/importer';
 import { readId3FromFile } from '../lib/id3';
 import { markConflicts } from '../lib/years';
+import { parseSpotifyDataExport, type ExportPlaylist } from '../lib/spotifyExport';
 import { uid } from '../lib/random';
 import { useAudioFiles } from './audioFiles';
 import { AlbumDateNote } from './InfoView';
 
-type Tab = 'text' | 'file' | 'audio';
+type Tab = 'spotify' | 'text' | 'file' | 'audio';
 
 interface Props {
   onCancel: () => void;
@@ -20,7 +21,9 @@ Daft Punk - Get Lucky (2013) https://open.spotify.com/track/...
 Amy Winehouse - Rehab; 2006`;
 
 export function ImportView({ onCancel, onImported }: Props) {
-  const [tab, setTab] = useState<Tab>('text');
+  const [tab, setTab] = useState<Tab>('spotify');
+  const [exportLists, setExportLists] = useState<ExportPlaylist[] | null>(null);
+  const [picked, setPicked] = useState<Set<number>>(new Set());
   const [name, setName] = useState('Meine Song-Liste');
   const [text, setText] = useState('');
   const [messages, setMessages] = useState<string[]>([]);
@@ -45,6 +48,18 @@ export function ImportView({ onCancel, onImported }: Props) {
       return;
     }
     const content = await file.text();
+    if (/\.json$/i.test(file.name) || content.trimStart().startsWith('{') || content.trimStart().startsWith('[')) {
+      const lists = parseSpotifyDataExport(content, file.name);
+      if (!lists) {
+        setMessages([`„${file.name}“ enthält keine lesbaren Playlists. Erwartet wird z. B. „Playlist1.json“ oder „YourLibrary.json“ aus dem Spotify-Datenexport.`]);
+        return;
+      }
+      setExportLists(lists);
+      setPicked(new Set(lists.length === 1 ? [0] : []));
+      setTab('spotify');
+      setMessages([]);
+      return;
+    }
     if (name === 'Meine Song-Liste') setName(file.name.replace(/\.[a-z]+$/i, ''));
     setText(content);
     setTab('text');
@@ -105,6 +120,7 @@ export function ImportView({ onCancel, onImported }: Props) {
       <div role="tablist" aria-label="Importart" className="tabs">
         {(
           [
+            ['spotify', 'Spotify-Datenexport'],
             ['text', 'Text einfügen'],
             ['file', 'CSV-/Textdatei'],
             ['audio', 'Eigene Audiodateien'],
@@ -127,6 +143,77 @@ export function ImportView({ onCancel, onImported }: Props) {
           </button>
         ))}
       </div>
+
+      {tab === 'spotify' && (
+        <section id="panel-spotify" role="tabpanel" aria-labelledby="tab-spotify" className="panel stack">
+          <p>
+            Lies deine eigenen Spotify-Playlists aus der Datei ein, die Spotify dir auf Anfrage zuschickt. Jahrgang braucht
+            dafür keinen Spotify-Login und ruft keine Spotify-Schnittstelle auf. Die Datei wird nur auf deinem Gerät gelesen.
+          </p>
+          <ol className="stack">
+            <li>
+              Melde dich im Browser bei deinem Spotify-Konto an und öffne <strong>Konto → Datenschutzeinstellungen</strong>.
+            </li>
+            <li>
+              Fordere unter <strong>„Deine Daten herunterladen“</strong> die <strong>Kontodaten</strong> an und bestätige die
+              E-Mail. Spotify schickt dir den Download meist innerhalb weniger Tage.
+            </li>
+            <li>
+              Entpacke die ZIP-Datei und wähle hier <code>Playlist1.json</code> (deine Playlists) oder{' '}
+              <code>YourLibrary.json</code> (Lieblingssongs). Bei vielen Playlists gibt es auch <code>Playlist2.json</code> usw.
+            </li>
+          </ol>
+          <label className="file-drop">
+            <input type="file" accept=".json,application/json" onChange={(e) => handleTextFile(e.target.files?.[0])} />
+            <span>JSON-Datei aus dem Spotify-Export auswählen …</span>
+          </label>
+          <p className="muted small">
+            Der Export enthält Titel, Interpret, Album und den Spotify-Link jedes Songs, aber <strong>keine Erscheinungsjahre</strong>.
+            Die trägst du anschließend in der Prüfansicht ein. Schneller geht es mit einer CSV-Datei aus einem Export-Tool, die
+            schon Album-Daten enthält (Reiter „CSV-/Textdatei“).
+          </p>
+
+          {exportLists && (
+            <fieldset className="stack">
+              <legend>Welche Playlists möchtest du übernehmen?</legend>
+              {exportLists.map((pl, i) => (
+                <label key={`${pl.name}-${i}`} className="check">
+                  <input
+                    type="checkbox"
+                    checked={picked.has(i)}
+                    onChange={(e) =>
+                      setPicked((prev) => {
+                        const next = new Set(prev);
+                        if (e.target.checked) next.add(i);
+                        else next.delete(i);
+                        return next;
+                      })
+                    }
+                  />
+                  {pl.name} <span className="muted">({pl.songs.length} {pl.songs.length === 1 ? 'Song' : 'Songs'})</span>
+                </label>
+              ))}
+              <div className="row wrap">
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  disabled={picked.size === 0}
+                  onClick={() => {
+                    const chosen = exportLists.filter((_, i) => picked.has(i));
+                    if (name === 'Meine Song-Liste' && chosen.length === 1) setName(chosen[0].name);
+                    const songs = markConflicts(chosen.flatMap((pl) => pl.songs));
+                    const listName = name === 'Meine Song-Liste' ? chosen.map((pl) => pl.name).join(' + ') : name;
+                    const now = Date.now();
+                    onImported({ id: uid('d'), name: listName.slice(0, 80), kind: 'list', songs, createdAt: now, updatedAt: now });
+                  }}
+                >
+                  {picked.size > 1 ? `${picked.size} Playlists zusammen übernehmen` : 'Playlist übernehmen'}
+                </button>
+              </div>
+            </fieldset>
+          )}
+        </section>
+      )}
 
       {tab === 'text' && (
         <section id="panel-text" role="tabpanel" aria-labelledby="tab-text" className="panel stack">

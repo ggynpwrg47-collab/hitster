@@ -40,6 +40,7 @@ ist eine installierbare Progressive Web App ohne Konto, Werbung oder Abo.
 | Veto-Chips (ein-/ausschaltbar, Startanzahl einstellbar) | ✅ ja | – |
 | Beispiel-Deck mit 62 Hits (1956–2022) | ✅ ja | – |
 | Eigene Listen per Text, CSV oder TSV (u. a. mit Spalten aus gängigen Playlist-Exporten) | ✅ ja | Qualität der Daten |
+| Eigene Spotify-Playlists aus dem offiziellen Spotify-Datenexport (JSON) einlesen | ✅ ja | Export muss bei Spotify angefordert werden; enthält keine Jahre |
 | Jahres-Prüfung: Genauigkeit, Warnungen bei Remaster/Live/Compilation/Duplikaten, Korrektur | ✅ ja | – |
 | Eigene Audiodateien abspielen, ohne Titel zu verraten | ✅ ja | Dateiformat muss der Browser unterstützen (MP3/AAC überall) |
 | Song über Link/Suche in Spotify, YouTube o. Ä. öffnen | ⚠️ teilweise | Konto und Abo beim Dienst; die Dienst-App zeigt den Titel an |
@@ -173,6 +174,12 @@ die korrekte Einrichtung: Authorization Code mit PKCE ohne Secret, minimale Scop
 ## Song-Listen und Jahreszahlen
 
 **Formate beim Import:**
+- **Eigene Spotify-Playlists über den offiziellen Datenexport:** Im Spotify-Konto unter *Datenschutzeinstellungen →
+  „Deine Daten herunterladen“* die Kontodaten anfordern. Danach die Datei `Playlist1.json` (bzw. `YourLibrary.json` für die
+  Lieblingssongs) im Reiter *Spotify-Datenexport* wählen und die gewünschten Playlists ankreuzen. Titel, Interpret, Album
+  und Spotify-Link werden übernommen. **Jahre enthält der Export nicht**; die werden in der Prüfansicht ergänzt. Das
+  Dateiformat ist von Spotify nicht öffentlich dokumentiert, darum akzeptiert der Import mehrere übliche Feldnamen.
+- **CSV aus einem Export-Tool** (z. B. Exportify): enthält zusätzlich das Album-Datum und spart so Tipparbeit.
 - Freitext, eine Zeile pro Song: `Interpret - Titel (Jahr)`, `Interpret – Titel; Jahr` und optional ein Link
   (`https://…` oder `spotify:track:…`, wird zu einem normalen Web-Link). `#` leitet einen Kommentar ein.
 - CSV/TSV mit Kopfzeile (Trennzeichen Komma, Semikolon oder Tab). Erkannt werden z. B. `Titel/Title/Track Name`,
