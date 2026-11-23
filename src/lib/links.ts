@@ -4,6 +4,8 @@ export type SearchProvider = 'spotify' | 'youtube' | 'none';
 /** Spotify-Links in der installierten Spotify-App (spotify:-Adresse) oder im Browser öffnen. */
 export type OpenIn = 'app' | 'browser';
 
+export const SPOTIFY_AUTOPLAY_SUFFIX = '#0:01';
+
 /** Akzeptiert nur http(s)-Links; wandelt "spotify:track:ID" in einen normalen Web-Link um. */
 export function normalizeLink(raw: string | undefined | null): string | undefined {
   if (!raw) return undefined;
@@ -55,7 +57,11 @@ export function spotifyAppUri(link: string | undefined, provider: SearchProvider
       const url = new URL(link);
       if (!url.hostname.endsWith('open.spotify.com')) return undefined;
       const m = url.pathname.match(/^\/(?:intl-[a-z-]+\/)?(track|album|playlist|episode)\/([A-Za-z0-9]{10,40})/);
-      return m ? `spotify:${m[1]}:${m[2]}` : undefined;
+      if (!m) return undefined;
+      // Neuere Spotify-Apps öffnen bei „spotify:track:…“ nur die Songseite. Mit einer Startposition
+      // (#m:ss) beginnt die Wiedergabe sofort – ein von Nutzern gemeldeter, nicht offiziell dokumentierter Weg.
+      // „#0:00“ wird ignoriert, daher 1 Sekunde.
+      return m[1] === 'track' ? `spotify:track:${m[2]}${SPOTIFY_AUTOPLAY_SUFFIX}` : `spotify:${m[1]}:${m[2]}`;
     } catch {
       return undefined;
     }

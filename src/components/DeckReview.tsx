@@ -3,10 +3,12 @@ import type { Deck, Song } from '../types';
 import { detectYearWarnings, formatDate, isPlayable, markConflicts, needsReview, parseDate, precisionLabel, maxYear, MIN_YEAR } from '../lib/years';
 import { normalizeLink } from '../lib/links';
 import { uid } from '../lib/random';
+import { downloadDeck } from '../lib/deckFile';
 import { ConfirmDialog } from './Dialog';
 import { useAudioFiles } from './audioFiles';
 import { AlbumDateNote } from './InfoView';
 import { OnlineCheckPanel } from './OnlineCheckPanel';
+import { PublishControls } from './PublishControls';
 import { acceptSuggestion, keepOwnYear } from '../lib/onlineCheck';
 
 interface Props {
@@ -16,6 +18,8 @@ interface Props {
   onBack: () => void;
   onPlay: () => void;
   onOpenDeck: (id: string) => void;
+  builtinFiles: Set<string>;
+  onOpenSettings: () => void;
 }
 
 type Filter = 'review' | 'all' | 'missing';
@@ -31,8 +35,8 @@ const SOURCE_LABEL: Record<Song['yearSource'], string> = {
   online: 'Online-Prüfung (MusicBrainz, Erstveröffentlichung)',
 };
 
-export function DeckReview({ deck, onChange, onDelete, onBack, onPlay, onOpenDeck }: Props) {
-  const readOnly = deck.kind === 'demo';
+export function DeckReview({ deck, onChange, onDelete, onBack, onPlay, onOpenDeck, builtinFiles, onOpenSettings }: Props) {
+  const readOnly = deck.kind === 'demo' || deck.kind === 'builtin';
   const missingCount = deck.songs.filter((s) => !isPlayable(s)).length;
   const toReviewCount = deck.songs.filter((s) => needsReview(s) || !isPlayable(s)).length;
   const [filter, setFilter] = useState<Filter>(toReviewCount > 0 && !readOnly ? 'review' : 'all');
@@ -82,7 +86,9 @@ export function DeckReview({ deck, onChange, onDelete, onBack, onPlay, onOpenDec
       ...deck,
       id,
       kind: 'list',
-      name: `${deck.name} (Kopie)`,
+      // Kopie einer eingebauten Liste behält den Dateinamen: „Änderungen fest einbauen“ ersetzt dann das Original.
+      name: deck.kind === 'builtin' ? deck.name : `${deck.name} (Kopie)`,
+      published: deck.kind === 'builtin' && deck.published ? { file: deck.published.file, at: 0 } : undefined,
       songs: deck.songs.map((s) => ({ ...s, id: uid('s') })),
       createdAt: now,
       updatedAt: now,
@@ -102,9 +108,14 @@ export function DeckReview({ deck, onChange, onDelete, onBack, onPlay, onOpenDec
               Als eigene Liste kopieren
             </button>
           ) : (
-            <button type="button" className="btn btn--danger-ghost" onClick={() => setConfirmDelete(true)}>
-              Liste löschen
-            </button>
+            <>
+              <button type="button" className="btn btn--danger-ghost" onClick={() => setConfirmDelete(true)}>
+                Liste löschen
+              </button>
+              <button type="button" className="btn btn--secondary" onClick={() => downloadDeck(deck)}>
+                ⤓ Exportieren (für alle Geräte)
+              </button>
+            </>
           )}
           <button type="button" className="btn btn--primary" onClick={onPlay} disabled={deck.songs.filter(isPlayable).length < 2}>
             Weiter zum Spiel
@@ -126,9 +137,12 @@ export function DeckReview({ deck, onChange, onDelete, onBack, onPlay, onOpenDec
         )}
         <p className="lead">
           {readOnly
-            ? 'Dieses Beispiel-Deck ist schreibgeschützt. Kopiere es, um Jahre oder Links zu ändern.'
+            ? deck.kind === 'builtin'
+              ? 'Diese Liste ist fest in die App eingebaut (Ordner src/decks/) und auf allen Geräten verfügbar. Zum Ändern kopieren, bearbeiten, neu exportieren und die Datei im Ordner ersetzen.'
+              : 'Dieses Beispiel-Deck ist schreibgeschützt. Kopiere es, um Jahre oder Links zu ändern.'
             : 'Prüft vor dem Spiel die Jahre. Markierte Songs haben möglicherweise ein falsches oder ungenaues Jahr. Ein eingetragenes oder bestätigtes Jahr gilt als geprüft. Songs ohne Jahr werden im Spiel übersprungen.'}
         </p>
+        <PublishControls deck={deck} onChange={onChange} builtinFiles={builtinFiles} onOpenSettings={onOpenSettings} />
         <p className="spoiler-warning" role="note">
           ⚠️ Achtung, Spoiler: Diese Ansicht zeigt alle Lösungen. Am besten prüft eine Person, die nicht mitspielt – oder ihr
           prüft gemeinsam nur die markierten Songs.

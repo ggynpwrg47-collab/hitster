@@ -54,7 +54,7 @@ export const storage = {
     const decks = read<Deck[]>(KEYS.decks, []);
     return Array.isArray(decks) ? decks.filter((d) => d && Array.isArray(d.songs)) : [];
   },
-  saveDecks: (decks: Deck[]) => write(KEYS.decks, decks.filter((d) => d.kind !== 'demo')),
+  saveDecks: (decks: Deck[]) => write(KEYS.decks, decks.filter((d) => d.kind !== 'demo' && d.kind !== 'builtin')),
   loadGame: (): GameState | null => {
     const g = read<GameState | null>(KEYS.game, null);
     return g && g.players && g.settings ? g : null;

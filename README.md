@@ -25,7 +25,7 @@ ist eine installierbare Progressive Web App ohne Konto, Werbung oder Abo.
 5. [Online über HTTPS bereitstellen](#3-online-über-https-bereitstellen)
 6. [Spotify-Dashboard, Redirect-URLs und Umgebungsvariablen](#4-spotify-dashboard-redirect-urls-und-umgebungsvariablen)
 7. [Spätere Veröffentlichung als native App](#5-spätere-veröffentlichung-als-native-app)
-8. [Song-Listen und Jahreszahlen](#song-listen-und-jahreszahlen)
+8. [Song-Listen und Jahreszahlen](#song-listen-und-jahreszahlen) · [Listen auf allen Geräten](#listen-auf-allen-geräten-nutzen)
 9. [Spielregeln inklusive Veto-Chips](#spielregeln)
 10. [Datenspeicherung und Sicherheit](#datenspeicherung-und-sicherheit)
 11. [Fehlerbehebung](#fehlerbehebung)
@@ -115,20 +115,45 @@ npm run preview     # Build lokal ausliefern: http://127.0.0.1:4173
 Jahrgang besteht nur aus statischen Dateien (`dist/`), daher eignet sich jeder kostenlose Static-Hoster.
 Alle folgenden Anbieter liefern automatisch **HTTPS**, was für die PWA-Installation nötig ist.
 
-**Netlify (empfohlen, am einfachsten)**
-1. Repository bei GitHub hochladen.
-2. Auf netlify.com „Add new site → Import from Git“ wählen.
-3. Build command `npm run build`, Publish directory `dist`.
-4. Die Sicherheits-Header aus `public/_headers` werden automatisch übernommen.
+**Netlify (empfohlen, am einfachsten, kostenlos)**
+1. Auf [netlify.com](https://www.netlify.com) mit dem GitHub-Konto anmelden.
+2. **„Add new site → Import an existing project → GitHub“** wählen und das Repository auswählen. Bei der ersten Verbindung
+   fragt GitHub, auf welche Repositorys Netlify zugreifen darf; nur dieses eine freigeben reicht.
+3. Unter **„Branch to deploy“** den Branch mit der App wählen (z. B. `main`).
+4. Build-Einstellungen nicht ändern. Sie kommen automatisch aus `netlify.toml` (`npm run build`, Ordner `dist`, Node 22).
+5. **„Deploy“** klicken. Nach etwa einer Minute steht die Seite unter `https://<zufallsname>.netlify.app`.
+6. Optional unter **Site configuration → Change site name** einen eigenen Namen wählen. Ein schwer zu erratender Name
+   (z. B. `jahrgang-k7q2`) ist besser als `jahrgang`.
+7. Jeder neue Push auf den Branch wird automatisch veröffentlicht.
+
+Sicherheits-Header aus `public/_headers` werden automatisch übernommen.
+
+**Wer kann die Seite sehen?**
+- Jeder, der die Adresse kennt. Sie ist aber nirgends verlinkt und für Suchmaschinen gesperrt: `noindex` steht als
+  Meta-Tag in `index.html` und als `X-Robots-Tag`-Header in `public/_headers`.
+- Deine Song-Listen, Spielstände und Einstellungen liegen **nicht** auf Netlify, sondern nur im Browser des jeweiligen
+  Geräts. Wer die Adresse kennt, sieht nur die leere App mit dem Beispiel-Deck.
+- Ein echter Passwortschutz ist bei Netlify kostenpflichtig. Kostenlos geht das mit Cloudflare Pages und
+  [Cloudflare Access](https://www.cloudflare.com/zero-trust/products/access/): erlaubte E-Mail-Adressen eintragen, Zugang
+  per Einmal-Code.
 
 **Cloudflare Pages:** gleiche Einstellungen (Framework „Vite“, Ausgabe `dist`); `_headers` wird ebenfalls unterstützt.
 
 **Vercel:** „Import Project“, Framework „Vite“; die Header kommen aus `vercel.json`.
 
-**GitHub Pages:** In den Repository-Einstellungen unter *Pages* als Quelle „GitHub Actions“ wählen und dann
-unter *Actions* den Workflow **„Deploy to GitHub Pages“** manuell starten. Er setzt `VITE_BASE_PATH`
-automatisch auf `/<repo-name>/`. Hinweis: GitHub Pages unterstützt keine eigenen HTTP-Header, die CSP
-aus `_headers` greift dort also nicht.
+**GitHub Pages** (Adresse: `https://<benutzer>.github.io/<repo-name>/`):
+1. Einmalig: Repository → *Settings* → *Pages* → *Build and deployment* → Source **„GitHub Actions“**.
+2. Der Workflow **„Deploy to GitHub Pages“** (`.github/workflows/pages.yml`) läuft danach bei jedem Push auf
+   `main` automatisch, also auch wenn du eine Liste mit „📌 Fest einbauen“ speicherst. Den ersten Lauf
+   startest du unter *Actions* → „Deploy to GitHub Pages“ → *Run workflow* (Branch `main`).
+3. Der Workflow setzt `VITE_BASE_PATH=/<repo-name>/` sowie Repository und Branch für „Fest einbauen“.
+
+Gut zu wissen:
+- GitHub Pages erlaubt keine eigenen HTTP-Header, `_headers` wird ignoriert. Die Content-Security-Policy wird
+  deshalb beim Build zusätzlich als `<meta>`-Tag eingebaut (ohne `frame-ancestors`, das geht nur als Header).
+  `noindex` steht ebenfalls als Meta-Tag in der Seite.
+- Die Seite ist öffentlich erreichbar, wer die Adresse kennt (auch bei privatem Repository).
+- Bei einem privaten Repository braucht GitHub Pages einen kostenpflichtigen Plan (z. B. GitHub Pro).
 
 Danach die HTTPS-Adresse auf dem Handy öffnen und „Zum Startbildschirm hinzufügen“ wählen:
 - **Android/Chrome:** Menü ⋮ → „App installieren“
@@ -207,6 +232,42 @@ die korrekte Einrichtung: Authorization Code mit PKCE ohne Secret, minimale Scop
 - In der **Prüfansicht** korrigiert oder bestätigt man die Jahre; ein von Hand eingetragenes Jahr gilt als geprüft.
   Songs ohne Jahr werden nicht gespielt. Beim Aufdecken ungeprüfter oder gewarnter Songs erscheint „⚠ Jahr unsicher“.
 
+## Listen auf allen Geräten nutzen
+
+Importierte Listen werden im **Browser des jeweiligen Geräts** gespeichert (`localStorage`). Was du am PC importierst,
+ist am Handy deshalb zunächst nicht da. Es gibt bewusst keinen Server und kein Konto, das Listen abgleicht.
+
+**Am einfachsten: per Klick fest einbauen**
+1. Einmalig unter *Info & Datenschutz → Listen fest einbauen (GitHub)* einen GitHub-Token einrichten. Die Anleitung steht
+   dort. Kurz: Bei GitHub einen **Fine-grained personal access token** erstellen, mit Zugriff **nur auf dieses Repository**
+   und nur **Contents: Read and write**, z. B. 90 Tage gültig. Repository und Branch sind auf Netlify automatisch vorausgefüllt.
+2. In einer Liste auf **„📌 Fest einbauen (alle Geräte)“** klicken und bestätigen. Jahrgang speichert die Liste als
+   `src/decks/<name>.jahrgang.json` im Repository.
+3. Netlify baut automatisch neu. Nach 1–2 Minuten ist die Liste auf allen Geräten da. Auf dem PC wird die lokale Liste dann
+   automatisch ausgeblendet, damit sie nicht doppelt erscheint.
+4. Spätere Änderungen: Liste bearbeiten → **„📌 Änderungen fest einbauen“**. Bei eingebauten Listen: „Als eigene Liste
+   kopieren“, bearbeiten, „Änderungen fest einbauen“ (ersetzt das Original). Entfernen: in der eingebauten Liste
+   **„Aus der App entfernen“**.
+
+Der Token liegt nur im Browser dieses Geräts (nicht im Code, nicht auf Netlify) und wird nur an `api.github.com` gesendet.
+Richte ihn nur auf deinem eigenen Gerät ein und entferne ihn dort, wenn du ihn nicht mehr brauchst.
+
+**Alternativ von Hand**
+1. Am PC die Liste importieren, die Jahre prüfen (gern mit „Jahre online prüfen“).
+2. In der Liste auf **„⤓ Exportieren (für alle Geräte)“** klicken. Es wird eine Datei wie `roadtrip-mix.jahrgang.json` gespeichert.
+3. Die Datei in den Ordner **`src/decks/`** im Repository legen. Am einfachsten auf GitHub im Browser: Ordner `src/decks`
+   öffnen → **„Add file → Upload files“** → Datei hineinziehen → **„Commit changes“**. Lokal: Datei kopieren, dann
+   `git add src/decks && git commit -m "Liste hinzugefügt" && git push`.
+4. Netlify baut die Seite automatisch neu. Nach etwa einer Minute steht die Liste auf **jedem Gerät** unter „Song-Listen“
+   mit der Markierung **„Fest eingebaut“**, am Handy ganz ohne Import.
+
+Eingebaute Listen sind schreibgeschützt. Zum Ändern: „Als eigene Liste kopieren“, bearbeiten, erneut exportieren und die
+Datei in `src/decks/` ersetzen. Zum Entfernen die Datei löschen.
+
+**Gut zu wissen:** Eingebaute Listen sind Teil der veröffentlichten Seite. Wer die Adresse kennt, kann sie sehen (Titel,
+Interpret, Jahr, Links – keine Musik, keine Kontodaten). Ohne Einbauen geht es auch direkt: Die exportierte Datei aufs
+Handy schicken und dort unter „Eigene Song-Liste anlegen → CSV-/Textdatei“ öffnen. Sie liegt dann nur auf diesem Handy.
+
 ## Spielregeln
 
 - **Zeitleiste:** Jeder startet mit einer aufgedeckten Karte. Der aktive Spieler ordnet den unbekannten Song in eine
@@ -229,6 +290,7 @@ die korrekte Einrichtung: Authorization Code mit PKCE ohne Secret, minimale Scop
 ## Datenspeicherung und Sicherheit
 
 - **Lokal im Browser** (`localStorage`): eigene Song-Listen, Einstellungen, Spielernamen und ein laufendes Spiel.
+- **In der App selbst:** nur Listen, die du bewusst in `src/decks/` ablegst (siehe „Listen auf allen Geräten nutzen“).
 - **Nicht gespeichert:** Audiodateien (nur im Arbeitsspeicher), Passwörter, Tokens, Konten. Es gibt keinen Server,
   kein Tracking und keine Cookies.
 - **Einzige Verbindung zu einem fremden Dienst:** die optionale Online-Prüfung der Jahre (Interpret + Titel an musicbrainz.org).
@@ -248,6 +310,7 @@ die korrekte Einrichtung: Authorization Code mit PKCE ohne Secret, minimale Scop
 | Song-Link öffnet die falsche Version | In der Prüfansicht einen direkten Link zur Originalversion eintragen. |
 | Jahre wirken falsch | Prüfansicht → Filter „Zu prüfen“. Album- und Remaster-Daten korrigieren. |
 | Klick auf „In der Spotify-App öffnen“ bewirkt nichts | Spotify-Desktop-App installiert? Beim ersten Mal die Browser-Nachfrage „Spotify öffnen?“ bestätigen. Sonst den Link „Im Browser öffnen“ nutzen oder unter *Info & Datenschutz* auf „Browser-Tab“ umstellen. |
+| Spotify öffnet den Song, spielt ihn aber nicht ab (der alte Song läuft weiter) | Neuere Spotify-Apps öffnen bei Links oft nur die Songseite. Jahrgang hängt deshalb eine Startposition an (`spotify:track:…#0:01`), damit die Wiedergabe sofort beginnt. Das ist ein von Nutzern gemeldeter, nicht offiziell dokumentierter Weg. Klappt er in deiner Spotify-Version nicht, in Spotify einmal auf Play drücken. Eine zuverlässige Steuerung ginge nur über Spotifys Wiedergabe-Schnittstelle, die für Spiele nicht erlaubt ist. |
 | Spotify kommt beim Abspielen in den Vordergrund und zeigt den Titel | Lässt sich aus einer Web-App nicht verhindern. Mit Alt+Tab (Mac: ⌘+Tab) zurück, oder die Musik per QR-Code auf einem Handy abspielen, das verdeckt liegt. |
 | Online-Prüfung meldet nur Fehler | Internetverbindung prüfen; manche Werbeblocker oder Firmennetze sperren musicbrainz.org. Bei Überlastung später erneut versuchen. |
 | Spotify verlangt beim Öffnen eines Links ein Login/Abo | Das entscheidet Spotify. Alternativ unter *Info & Datenschutz* die YouTube-Suche wählen oder eigene Audiodateien nutzen. |

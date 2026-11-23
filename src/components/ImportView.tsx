@@ -4,6 +4,7 @@ import { createSong, importText, parseFileName } from '../lib/importer';
 import { readId3FromFile } from '../lib/id3';
 import { markConflicts } from '../lib/years';
 import { parseSpotifyDataExport, type ExportPlaylist } from '../lib/spotifyExport';
+import { parseDeckFile } from '../lib/deckFile';
 import { uid } from '../lib/random';
 import { useAudioFiles } from './audioFiles';
 import { AlbumDateNote } from './InfoView';
@@ -49,6 +50,11 @@ export function ImportView({ onCancel, onImported }: Props) {
     }
     const content = await file.text();
     if (/\.json$/i.test(file.name) || content.trimStart().startsWith('{') || content.trimStart().startsWith('[')) {
+      const own = parseDeckFile(content);
+      if (own) {
+        onImported(own); // exportierte Jahrgang-Liste, z. B. von einem anderen Gerät
+        return;
+      }
       const lists = parseSpotifyDataExport(content, file.name);
       if (!lists) {
         setMessages([`„${file.name}“ enthält keine lesbaren Playlists. Erwartet wird z. B. „Playlist1.json“ oder „YourLibrary.json“ aus dem Spotify-Datenexport.`]);
@@ -256,9 +262,12 @@ export function ImportView({ onCancel, onImported }: Props) {
 
       {tab === 'file' && (
         <section id="panel-file" role="tabpanel" aria-labelledby="tab-file" className="panel stack">
-          <p>Wähle eine CSV- oder Textdatei von deinem Gerät. Sie wird nur lokal gelesen und nicht hochgeladen.</p>
+          <p>
+            Wähle eine CSV- oder Textdatei – oder eine mit „Exportieren“ gespeicherte Jahrgang-Liste (<code>*.jahrgang.json</code>).
+            Die Datei wird nur lokal gelesen und nicht hochgeladen.
+          </p>
           <label className="file-drop">
-            <input type="file" accept=".csv,.tsv,.txt,text/csv,text/plain" onChange={(e) => handleTextFile(e.target.files?.[0])} />
+            <input type="file" accept=".csv,.tsv,.txt,.json,text/csv,text/plain,application/json" onChange={(e) => handleTextFile(e.target.files?.[0])} />
             <span>Datei auswählen …</span>
           </label>
         </section>

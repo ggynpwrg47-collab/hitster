@@ -65,8 +65,8 @@ describe('Links', () => {
     expect(normalizeLink('nonsense')).toBeUndefined();
   });
   it('wandelt Spotify-Links in App-Adressen um', () => {
-    expect(spotifyAppUri('https://open.spotify.com/track/4u7EnebtmKWzUH433cf5Qv?si=abc', 'spotify', 'a', 'b')).toBe('spotify:track:4u7EnebtmKWzUH433cf5Qv');
-    expect(spotifyAppUri('https://open.spotify.com/intl-de/track/4u7EnebtmKWzUH433cf5Qv', 'spotify', 'a', 'b')).toBe('spotify:track:4u7EnebtmKWzUH433cf5Qv');
+    expect(spotifyAppUri('https://open.spotify.com/track/4u7EnebtmKWzUH433cf5Qv?si=abc', 'spotify', 'a', 'b')).toBe('spotify:track:4u7EnebtmKWzUH433cf5Qv#0:01');
+    expect(spotifyAppUri('https://open.spotify.com/intl-de/track/4u7EnebtmKWzUH433cf5Qv', 'spotify', 'a', 'b')).toBe('spotify:track:4u7EnebtmKWzUH433cf5Qv#0:01');
     expect(spotifyAppUri('https://www.youtube.com/watch?v=x', 'spotify', 'a', 'b')).toBeUndefined();
     expect(spotifyAppUri(undefined, 'spotify', 'Queen', 'Bohemian Rhapsody')).toBe('spotify:search:Queen%20Bohemian%20Rhapsody');
     expect(spotifyAppUri(undefined, 'youtube', 'Queen', 'X')).toBeUndefined();

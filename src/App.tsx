@@ -3,6 +3,8 @@ import type { Deck, GameSettings, PlayerSetup } from './types';
 import { createGame, gameReducer, type GameAction } from './lib/game';
 import type { GameState } from './types';
 import { createDemoDeck } from './lib/demoDeck';
+import { loadBuiltinDecks } from './lib/builtinDecks';
+import { forgetGitHub } from './lib/github';
 import { storage, type Prefs } from './lib/storage';
 import { randomSeed } from './lib/random';
 import { Home } from './components/Home';
@@ -29,7 +31,7 @@ function appGameReducer(state: GameState | null, action: Action): GameState | nu
 }
 
 export default function App() {
-  const [decks, setDecks] = useState<Deck[]>(() => [createDemoDeck(), ...storage.loadDecks()]);
+  const [decks, setDecks] = useState<Deck[]>(() => [createDemoDeck(), ...loadBuiltinDecks(), ...storage.loadDecks()]);
   const [prefs, setPrefs] = useState<Prefs>(() => storage.loadPrefs());
   const [game, dispatch] = useReducer(appGameReducer, null, () => storage.loadGame());
   const [view, setView] = useState<View>({ name: 'home' });
@@ -62,7 +64,7 @@ export default function App() {
   }, []);
 
   const deleteDeck = useCallback((id: string) => {
-    setDecks((list) => list.filter((d) => d.id !== id || d.kind === 'demo'));
+    setDecks((list) => list.filter((d) => d.id !== id || d.kind === 'demo' || d.kind === 'builtin'));
     setView({ name: 'home' });
   }, []);
 
@@ -77,6 +79,12 @@ export default function App() {
   );
 
   const deckById = useMemo(() => new Map(decks.map((d) => [d.id, d])), [decks]);
+  const builtinFiles = useMemo(() => new Set(decks.filter((d) => d.kind === 'builtin').map((d) => d.published!.file)), [decks]);
+  // Eigene Listen ausblenden, sobald sie unverändert als eingebaute Liste vorliegen (keine Doppelten).
+  const visibleDecks = useMemo(
+    () => decks.filter((d) => !(d.kind === 'list' && d.published && builtinFiles.has(d.published.file) && d.updatedAt <= d.published.at)),
+    [decks, builtinFiles],
+  );
 
   let content: React.ReactNode;
   switch (view.name) {
@@ -101,6 +109,8 @@ export default function App() {
           onBack={() => setView({ name: 'home' })}
           onPlay={() => setView({ name: 'setup', deckId: deck.id })}
           onOpenDeck={(id) => setView({ name: 'deck', deckId: id })}
+          builtinFiles={builtinFiles}
+          onOpenSettings={() => setView({ name: 'info' })}
         />
       ) : (
         <Missing onBack={() => setView({ name: 'home' })} />
@@ -150,7 +160,8 @@ export default function App() {
           onBack={() => setView({ name: 'home' })}
           onClearAll={() => {
             storage.clearAll();
-            setDecks([createDemoDeck()]);
+            forgetGitHub();
+            setDecks([createDemoDeck(), ...loadBuiltinDecks()]);
             setPrefs(storage.loadPrefs());
             dispatch({ type: 'load', state: null });
             setView({ name: 'home' });
@@ -161,7 +172,7 @@ export default function App() {
     default:
       content = (
         <Home
-          decks={decks}
+          decks={visibleDecks}
           game={game}
           onResume={() => setView({ name: 'game' })}
           onDiscardGame={() => dispatch({ type: 'load', state: null })}

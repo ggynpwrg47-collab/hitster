@@ -178,7 +178,8 @@ function LinkPlayback({ song, searchProvider, openIn, revealed }: Props) {
       {appUri && (
         <p className="muted small">
           Spotify kommt dabei in den Vordergrund – mit <kbd>Alt</kbd>+<kbd>Tab</kbd> (Mac: <kbd>⌘</kbd>+<kbd>Tab</kbd>) zurück zum
-          Spiel. Nichts passiert?{' '}
+          Spiel. {isSearch ? 'In Spotify das Original auswählen und abspielen.' : 'Zeigt Spotify nur die Songseite, dort einmal auf Play drücken.'}{' '}
+          Nichts passiert?{' '}
           <button type="button" className="link-btn" onClick={openInBrowser}>
             Im Browser öffnen
           </button>
