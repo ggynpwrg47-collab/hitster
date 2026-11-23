@@ -141,10 +141,19 @@ Sicherheits-Header aus `public/_headers` werden automatisch übernommen.
 
 **Vercel:** „Import Project“, Framework „Vite“; die Header kommen aus `vercel.json`.
 
-**GitHub Pages:** In den Repository-Einstellungen unter *Pages* als Quelle „GitHub Actions“ wählen und dann
-unter *Actions* den Workflow **„Deploy to GitHub Pages“** manuell starten. Er setzt `VITE_BASE_PATH`
-automatisch auf `/<repo-name>/`. Hinweis: GitHub Pages unterstützt keine eigenen HTTP-Header, die CSP
-aus `_headers` greift dort also nicht.
+**GitHub Pages** (Adresse: `https://<benutzer>.github.io/<repo-name>/`):
+1. Einmalig: Repository → *Settings* → *Pages* → *Build and deployment* → Source **„GitHub Actions“**.
+2. Der Workflow **„Deploy to GitHub Pages“** (`.github/workflows/pages.yml`) läuft danach bei jedem Push auf
+   `main` automatisch, also auch wenn du eine Liste mit „📌 Fest einbauen“ speicherst. Den ersten Lauf
+   startest du unter *Actions* → „Deploy to GitHub Pages“ → *Run workflow* (Branch `main`).
+3. Der Workflow setzt `VITE_BASE_PATH=/<repo-name>/` sowie Repository und Branch für „Fest einbauen“.
+
+Gut zu wissen:
+- GitHub Pages erlaubt keine eigenen HTTP-Header, `_headers` wird ignoriert. Die Content-Security-Policy wird
+  deshalb beim Build zusätzlich als `<meta>`-Tag eingebaut (ohne `frame-ancestors`, das geht nur als Header).
+  `noindex` steht ebenfalls als Meta-Tag in der Seite.
+- Die Seite ist öffentlich erreichbar, wer die Adresse kennt (auch bei privatem Repository).
+- Bei einem privaten Repository braucht GitHub Pages einen kostenpflichtigen Plan (z. B. GitHub Pro).
 
 Danach die HTTPS-Adresse auf dem Handy öffnen und „Zum Startbildschirm hinzufügen“ wählen:
 - **Android/Chrome:** Menü ⋮ → „App installieren“
